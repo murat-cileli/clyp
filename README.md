@@ -5,11 +5,14 @@ Bu uygulama, SQLite veritabanı entegrasyonu ve GNOME'un karanlık/açık tema t
 ## Özellikler
 
 - ✅ **SQLite Veritabanı Entegrasyonu**: `clipboard.db` dosyasından veri okuma
-- ✅ **Clipboard Tablosu Desteği**: `content` kolonundaki verileri liste halinde gösterme
+- ✅ **Tarih/Saat Desteği**: `date_time` kolonunu alt başlık olarak gösterme
+- ✅ **Akıllı Tarih Formatı**: "2 saat önce", "3 gün önce" gibi kullanıcı dostu format
+- ✅ **Clipboard Kopyalama**: Çift tıklama veya Enter ile panoya kopyalama
+- ✅ **Wayland Uyumluluğu**: Linux Wayland ile tam uyumlu clipboard desteği
 - ✅ **Kaydırılabilir Liste**: ScrolledWindow ile büyük veri setleri için optimizasyon
+- ✅ **Modern CSS Stilleri**: Özel CSS ile gelişmiş görsel tasarım
 - ✅ **GNOME Tema Desteği**: Sistem tema tercihini otomatik algılama
-- ✅ **Gerçek Zamanlı Takip**: `org.gnome.desktop.interface color-scheme` ayarını okuma
-- ✅ **Modern Arayüz**: GTK4'ün yerli tema desteğini kullanma
+- ✅ **Klavye Desteği**: Enter tuşu ile hızlı kopyalama
 
 ## Nasıl Çalışır
 
@@ -17,15 +20,22 @@ Uygulama aşağıdaki yöntemlerle SQLite entegrasyonu ve GNOME tema desteği sa
 
 ### SQLite Veritabanı Entegrasyonu
 1. **Veritabanı Bağlantısı**: Uygulama başladığında `./clipboard.db` dosyasına bağlanır
-2. **Veri Okuma**: `clipboard` tablosundaki `content` kolonundan verileri okur
+2. **Veri Okuma**: `clipboard` tablosundaki `content` ve `date_time` kolonlarından verileri okur
 3. **Filtreleme**: Sadece anlamlı metinsel içerikleri gösterir (sayısal veriler filtrelenir)
 4. **Sıralama**: Veriler tarih sırasına göre (en yeni önce) listelenir
-5. **Kaydırılabilir Arayüz**: ScrolledWindow ile 100+ kayıt için optimize edilmiş görüntüleme
+5. **Tarih Formatı**: Akıllı tarih gösterimi ("2 saat önce", "3 gün önce", "15.12.2024 14:30")
+6. **Kaydırılabilir Arayüz**: ScrolledWindow ile 100+ kayıt için optimize edilmiş görüntüleme
 
 ### GNOME Tema Desteği
 1. **GSettings Entegrasyonu**: `org.gnome.desktop.interface` şemasından `color-scheme` ayarını okur
 2. **Gerçek Zamanlı Takip**: Sistem tema değişikliklerini dinler ve otomatik olarak günceller
 3. **GTK4 Uyumluluğu**: `gtk-application-prefer-dark-theme` özelliğini kullanarak GTK4'ün yerli tema desteğinden yararlanır
+
+### Clipboard Kopyalama Özelliği
+1. **Çift Tıklama**: Herhangi bir liste öğesine çift tıklayarak içeriği panoya kopyalayın
+2. **Enter Tuşu**: Bir öğeyi seçip Enter tuşuna basarak kopyalayın
+3. **Wayland Desteği**: Linux Wayland ortamında tam uyumlu çalışır
+4. **Sadece İçerik**: Tarih bilgisi hariç, sadece ana içerik kopyalanır
 
 ## Derleme ve Çalıştırma
 
@@ -66,6 +76,7 @@ gsettings get org.gnome.desktop.interface color-scheme
 
 ### Kullanılan Kütüphaneler
 - `github.com/diamondburned/gotk4/pkg/gtk/v4` - GTK4 bağlamaları
+- `github.com/diamondburned/gotk4/pkg/gdk/v4` - GDK4 (CSS ve display desteği)
 - `github.com/diamondburned/gotk4/pkg/gio/v2` - GIO/GSettings desteği
 - `github.com/mattn/go-sqlite3` - SQLite veritabanı desteği
 
@@ -155,6 +166,50 @@ gsettings list-keys org.gnome.desktop.interface
 # Tema adını kontrol et
 gsettings get org.gnome.desktop.interface gtk-theme
 ```
+
+## 🖱️ Kullanım Kılavuzu
+
+### Temel Kullanım
+
+1. **Uygulamayı Başlatın**:
+   ```bash
+   ./go-gtk4-app
+   ```
+
+2. **Clipboard Verilerini Görüntüleme**:
+   - Uygulama açıldığında SQLite veritabanından veriler otomatik yüklenir
+   - Her öğe ana içerik ve tarih bilgisi ile gösterilir
+
+3. **Panoya Kopyalama**:
+   - **Çift Tıklama**: Herhangi bir liste öğesine çift tıklayın
+   - **Enter Tuşu**: Bir öğeyi seçip Enter tuşuna basın
+   - Sadece ana içerik kopyalanır (tarih bilgisi hariç)
+
+4. **Yapıştırma**:
+   - Başka bir uygulamada `Ctrl+V` ile yapıştırın
+   - Wayland ve X11 ortamlarında çalışır
+
+### Test Etme
+
+Clipboard kopyalama özelliğini test etmek için:
+
+```bash
+# Terminal'de uygulamayı çalıştırın
+./go-gtk4-app
+
+# Başka bir terminal açın ve şunu çalıştırın:
+xclip -o        # X11 için
+# veya
+wl-paste        # Wayland için
+# veya
+xsel --clipboard --output  # Alternatif X11 komutu
+```
+
+### Klavye Kısayolları
+
+- **Enter**: Seçili öğeyi panoya kopyala
+- **↑/↓**: Liste öğeleri arasında gezin
+- **Tab**: Arayüz öğeleri arasında geçiş
 
 ## Lisans
 
