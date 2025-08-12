@@ -2,7 +2,10 @@ module murat-cileli/go-gtk4
 
 go 1.24.6
 
-require github.com/diamondburned/gotk4/pkg v0.3.1
+require (
+	github.com/diamondburned/gotk4/pkg v0.3.1
+	github.com/mattn/go-sqlite3 v1.14.22
+)
 
 require (
 	github.com/KarpelesLab/weak v0.1.1 // indirect

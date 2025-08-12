@@ -1,13 +1,15 @@
 package main
 
 import (
-	"os"
-
+	"database/sql"
 	_ "embed"
+	"log"
+	"os"
 
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:embed main.ui
@@ -37,34 +39,91 @@ func activate(app *gtk.Application) {
 	window.Show()
 }
 
-// setupListBox ListBox'a örnek içerik ekler
+// setupListBox ListBox'ı veritabanından gelen verilerle doldurur
 func setupListBox(listBox *gtk.ListBox) {
-	// Örnek liste öğeleri
-	items := []string{
-		"Hoş geldiniz! Bu uygulama GNOME tema desteği ile gelir.",
-		"Sistem temanızı değiştirdiğinizde uygulama otomatik olarak güncellenir.",
-		"Karanlık tema için: gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'",
-		"Açık tema için: gsettings set org.gnome.desktop.interface color-scheme 'default'",
-		"Bu liste GTK4'ün modern tasarım dilini kullanır.",
+	items, err := getClipboardItems()
+	if err != nil {
+		log.Printf("Veritabanından veri alınırken hata: %v", err)
+		return
+	}
+
+	if len(items) == 0 {
+		// TODO: Boş veri mesajı ekle.
 	}
 
 	for _, item := range items {
-		// Her öğe için bir label oluştur
 		label := gtk.NewLabel(item)
 		label.SetWrap(true)
 		label.SetWrapMode(pango.WrapWord)
-		label.SetXAlign(0) // Sol hizalama
+		label.SetXAlign(0)
 		label.SetMarginTop(12)
 		label.SetMarginBottom(12)
 		label.SetMarginStart(12)
 		label.SetMarginEnd(12)
 
-		// ListBoxRow oluştur ve label'ı ekle
 		row := gtk.NewListBoxRow()
 		row.SetChild(label)
 
 		listBox.Append(row)
 	}
+}
+
+// getClipboardItems veritabanından clipboard tablosundaki content verilerini alır
+func getClipboardItems() ([]string, error) {
+	// Veritabanı dosyasının yolu
+	dbPath := "./clipboard.db"
+
+	// Veritabanı bağlantısını aç
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	// Veritabanı bağlantısını test et
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Query(`
+		SELECT content
+		FROM clipboard
+		WHERE content IS NOT NULL AND content != ''
+		ORDER BY date_time DESC
+		LIMIT 30
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []string
+	for rows.Next() {
+		var content string
+		if err := rows.Scan(&content); err != nil {
+			log.Printf("Satır okunurken hata: %v", err)
+			continue
+		}
+		if len(content) == 0 {
+			continue
+		}
+		items = append(items, content)
+	}
+
+	return items, nil
+}
+
+// createClipboardTable clipboard tablosunu oluşturur
+func createClipboardTable(db *sql.DB) error {
+	query := `
+	CREATE TABLE clipboard (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		content TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`
+
+	_, err := db.Exec(query)
+	return err
 }
 
 // setupThemeSupport GNOME'un karanlık/açık tema tercihini destekler

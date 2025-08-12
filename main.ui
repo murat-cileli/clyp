@@ -34,22 +34,33 @@
         <property name="valign">fill</property>
         <property name="vexpand">true</property>
         <property name="hexpand">true</property>
-        <property name="margin-top">12</property>
-        <property name="margin-bottom">12</property>
-        <property name="margin-start">12</property>
-        <property name="margin-end">12</property>
-        <property name="spacing">12</property>
+        <property name="margin-top">0</property>
+        <property name="margin-bottom">0</property>
+        <property name="margin-start">0</property>
+        <property name="margin-end">0</property>
+        <property name="spacing">0</property>
 
         <child>
-          <object class="GtkListBox" id="clipboard_list">
-            <property name="selection-mode">1</property>
+          <object class="GtkScrolledWindow">
             <property name="halign">fill</property>
             <property name="valign">fill</property>
             <property name="vexpand">true</property>
             <property name="hexpand">true</property>
-            <style>
-              <class name="boxed-list"/>
-            </style>
+            <property name="hscrollbar-policy">never</property>
+            <property name="vscrollbar-policy">automatic</property>
+            <property name="min-content-height">300</property>
+            <property name="max-content-height">600</property>
+            <property name="propagate-natural-height">false</property>
+            <property name="overlay-scrolling">true</property>
+            <child>
+              <object class="GtkListBox" id="clipboard_list">
+                <property name="selection-mode">1</property>
+                <property name="halign">fill</property>
+                <property name="valign">start</property>
+                <property name="show-separators">true</property>
+
+              </object>
+            </child>
           </object>
         </child>
       </object>
@@ -58,14 +69,6 @@
   </object>
   <menu id="primary_menu">
     <section>
-      <item>
-        <attribute name="label" translatable="yes">_Preferences</attribute>
-        <attribute name="action">app.preferences</attribute>
-      </item>
-      <item>
-        <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
-        <attribute name="action">win.show-help-overlay</attribute>
-      </item>
       <item>
         <attribute name="label" translatable="yes">_About Gnome-1</attribute>
         <attribute name="action">app.about</attribute>
