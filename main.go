@@ -23,8 +23,12 @@ var cssData string
 
 // ClipboardItem veritabanından okunan clipboard verisini temsil eder
 type ClipboardItem struct {
-	Content  string
-	DateTime string
+	ID          int
+	Type        int
+	IsPinned    int
+	IsEncrypted int
+	Content     string
+	DateTime    string
 }
 
 func main() {
@@ -44,7 +48,7 @@ func activate(app *gtk.Application) {
 	window := builder.GetObject("GtkWindow").Cast().(*gtk.ApplicationWindow)
 
 	// GNOME tema desteği için ayarları yapılandır
-	setupThemeSupport()
+	setupStyleSupport()
 
 	// ListBox'ı al ve örnek içerik ekle
 	listBox := builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
@@ -203,9 +207,8 @@ func getClipboardItems() ([]ClipboardItem, error) {
 	}
 
 	rows, err := db.Query(`
-		SELECT content, date_time
+		SELECT *
 		FROM clipboard
-		WHERE content IS NOT NULL AND content != ''
 		ORDER BY date_time DESC
 		LIMIT 30
 	`)
@@ -214,23 +217,17 @@ func getClipboardItems() ([]ClipboardItem, error) {
 	}
 	defer rows.Close()
 
-	var items []ClipboardItem
+	var clipboardItems []ClipboardItem
+	var clipboardItem ClipboardItem
 	for rows.Next() {
-		var content, dateTime string
-		if err := rows.Scan(&content, &dateTime); err != nil {
+		if err := rows.Scan(&clipboardItem.ID, &clipboardItem.Type, &clipboardItem.DateTime, &clipboardItem.IsPinned, &clipboardItem.Content, &clipboardItem.IsEncrypted); err != nil {
 			log.Printf("Satır okunurken hata: %v", err)
 			continue
 		}
-		if len(content) == 0 {
-			continue
-		}
-		items = append(items, ClipboardItem{
-			Content:  content,
-			DateTime: dateTime,
-		})
+		clipboardItems = append(clipboardItems, clipboardItem)
 	}
 
-	return items, nil
+	return clipboardItems, nil
 }
 
 // formatDateTime tarih string'ini kullanıcı dostu formata çevirir
@@ -291,68 +288,19 @@ func createClipboardTable(db *sql.DB) error {
 	return err
 }
 
-// setupThemeSupport GNOME'un karanlık/açık tema tercihini destekler
-func setupThemeSupport() {
-	// GTK ayarlarını al
+func setupStyleSupport() {
 	gtkSettings := gtk.SettingsGetDefault()
-	if gtkSettings == nil {
-		return
-	}
-
-	// GNOME'un tema tercihini kontrol et
-	// Bu, gsettings'den org.gnome.desktop.interface color-scheme değerini okur
-	// Değerler: 'default' (açık), 'prefer-dark' (karanlık)
-
-	// GNOME desktop interface ayarlarını al
 	gnomeSettings := gio.NewSettings("org.gnome.desktop.interface")
-	if gnomeSettings != nil {
-		// GNOME color-scheme ayarını oku
-		colorScheme := gnomeSettings.String("color-scheme")
 
-		// Tema tercihini ayarla
-		preferDark := colorScheme == "prefer-dark"
-		gtkSettings.SetObjectProperty("gtk-application-prefer-dark-theme", preferDark)
-
-		// GNOME ayarlarındaki değişiklikleri dinle
-		gnomeSettings.Connect("changed::color-scheme", func() {
-			newColorScheme := gnomeSettings.String("color-scheme")
-			newPreferDark := newColorScheme == "prefer-dark"
-			gtkSettings.SetObjectProperty("gtk-application-prefer-dark-theme", newPreferDark)
-		})
-	} else {
-		// GNOME ayarları mevcut değilse, GTK tema adından çıkarım yap
-		gtkSettings.SetObjectProperty("gtk-application-prefer-dark-theme", false) // Varsayılan olarak açık tema
-	}
-
-	// Sistem tema değişikliklerini dinle
-	gtkSettings.Connect("notify::gtk-theme-name", func() {
-		// Tema değiştiğinde gerekli işlemleri yap
-		handleThemeChange(gtkSettings)
+	gnomeSettings.Connect("changed::color-scheme", func() {
+		handleStyleChange(gtkSettings, gnomeSettings)
 	})
 
-	// Karanlık tema tercihini de dinle
-	gtkSettings.Connect("notify::gtk-application-prefer-dark-theme", func() {
-		// Karanlık tema tercihi değiştiğinde
-		handleThemeChange(gtkSettings)
-	})
-
-	// İlk tema kontrolü
-	handleThemeChange(gtkSettings)
+	handleStyleChange(gtkSettings, gnomeSettings)
 }
 
-// handleThemeChange tema değişikliklerini işler
-func handleThemeChange(settings *gtk.Settings) {
-	// Mevcut tema adını al
-	themeName := settings.ObjectProperty("gtk-theme-name")
-	if themeNameStr, ok := themeName.(string); ok {
-		// Adwaita-dark teması karanlık tema tercihini gösterir
-		if themeNameStr == "Adwaita-dark" {
-			settings.SetObjectProperty("gtk-application-prefer-dark-theme", true)
-		} else if themeNameStr == "Adwaita" {
-			// Sistem tema tercihini kontrol et
-			// GNOME'da gsettings get org.gnome.desktop.interface color-scheme
-			// komutu ile kontrol edilebilir
-			settings.SetObjectProperty("gtk-application-prefer-dark-theme", false)
-		}
-	}
+func handleStyleChange(gtkSettings *gtk.Settings, gnomeSettings *gio.Settings) {
+	colorScheme := gnomeSettings.String("color-scheme")
+	preferDark := colorScheme == "prefer-dark"
+	gtkSettings.SetObjectProperty("gtk-application-prefer-dark-theme", preferDark)
 }
