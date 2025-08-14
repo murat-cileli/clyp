@@ -24,7 +24,7 @@ type Application struct {
 }
 
 func (app *Application) init() {
-	gtkApp := gtk.NewApplication("com.github.diamondburned.gotk4-examples.gtk4.simple", gio.ApplicationFlagsNone)
+	gtkApp := gtk.NewApplication("bio.murat.clyp", gio.ApplicationFlagsNone)
 	gtkApp.ConnectActivate(func() { app.activate(gtkApp) })
 
 	if code := gtkApp.Run(os.Args); code > 0 {
@@ -38,7 +38,6 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 		os.Exit(1)
 	}
 
-	gtkApp.SetApplicationID("bio.murat.clyp")
 	builder := gtk.NewBuilderFromString(uiXML)
 	window := builder.GetObject("GtkWindow").Cast().(*gtk.ApplicationWindow)
 
@@ -68,8 +67,6 @@ func (app *Application) listClipboardItems() {
 		log.Printf("Veritabanından veri alınırken hata: %v", err)
 		return
 	}
-
-	log.Printf("Veritabanından %d öğe alındı.", len(items))
 
 	if len(items) == 0 {
 		// TODO: Boş veri mesajı ekle.

@@ -5,7 +5,6 @@
     <property name="title">Clyp</property>
     <property name="default-width">500</property>
     <property name="default-height">600</property>
-
     <property name="titlebar">
       <object class="GtkHeaderBar" id="GtkHeaderBar">
         <style>
@@ -25,11 +24,8 @@
             <property name="width-chars">5</property>
           </object>
         </property>
-
-
       </object>
     </property>
-
     <property name="child">
       <object class="GtkBox">
         <property name="orientation">1</property>
@@ -42,7 +38,6 @@
         <property name="margin-start">12</property>
         <property name="margin-end">12</property>
         <property name="spacing">12</property>
-
         <child>
           <object class="GtkScrolledWindow">
             <property name="halign">fill</property>
@@ -64,14 +59,12 @@
                 <property name="halign">fill</property>
                 <property name="valign">start</property>
                 <property name="show-separators">true</property>
-
               </object>
             </child>
           </object>
         </child>
       </object>
     </property>
-
   </object>
   <menu id="primary_menu">
     <section>
