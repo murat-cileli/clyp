@@ -16,7 +16,11 @@ import (
 //go:embed main.ui
 var uiXML string
 
+var database Database
+
 type Application struct {
+	ClipboardItemsVisualLimit byte
+	ClipboardItemsList        *gtk.ListBox
 }
 
 func (app *Application) init() {
@@ -29,25 +33,43 @@ func (app *Application) init() {
 }
 
 func (app *Application) activate(gtkApp *gtk.Application) {
+	if err := database.init(); err != nil {
+		os.Stderr.WriteString(err.Error())
+		os.Exit(1)
+	}
+
 	builder := gtk.NewBuilderFromString(uiXML)
 	window := builder.GetObject("GtkWindow").Cast().(*gtk.ApplicationWindow)
 
-	listBox := builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
-	app.setupListBox(listBox)
-	app.setupListBoxEvents(listBox)
+	app.ClipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
+	app.ClipboardItemsList.Activate()
+	go app.listClipboardItems()
+	//app.setupListBoxEvents()
 
+	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
+	searchEntry.ConnectActivate(func() {
+		log.Println("Enter tuşuna basıldı, arama yapılabilir.")
+	})
+	searchEntry.ConnectSearchChanged(func() {
+		log.Printf("Arama metni değişti: %s", searchEntry.Text())
+	})
+
+	app.ClipboardItemsVisualLimit = 50
 	app.setupStyleSupport()
 	app.setupAboutAction(gtkApp, window)
 	window.SetApplication(gtkApp)
 	window.SetVisible(true)
+
 }
 
-func (app *Application) setupListBox(listBox *gtk.ListBox) {
-	items, err := getClipboardItems()
+func (app *Application) listClipboardItems() {
+	items, err := database.ClipboardItems()
 	if err != nil {
 		log.Printf("Veritabanından veri alınırken hata: %v", err)
 		return
 	}
+
+	log.Printf("Veritabanından %d öğe alındı.", len(items))
 
 	if len(items) == 0 {
 		// TODO: Boş veri mesajı ekle.
@@ -76,28 +98,28 @@ func (app *Application) setupListBox(listBox *gtk.ListBox) {
 		row := gtk.NewListBoxRow()
 		row.SetChild(box)
 
-		listBox.Append(row)
+		app.ClipboardItemsList.Append(row)
 	}
 }
 
-func (app *Application) setupListBoxEvents(listBox *gtk.ListBox) {
-	listBox.ConnectRowActivated(func(row *gtk.ListBoxRow) {
-		copyRowContentToClipboard(row)
+func (app *Application) setupListBoxEvents() {
+	app.ClipboardItemsList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
+		//copyRowContentToClipboard(row)
 	})
 
 	keyController := gtk.NewEventControllerKey()
 	keyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
-			selectedRow := listBox.SelectedRow()
+			selectedRow := app.ClipboardItemsList.SelectedRow()
 			if selectedRow != nil {
-				copyRowContentToClipboard(selectedRow)
-				return true // Event'i consume et
+				//copyRowContentToClipboard(selectedRow)
+				return true
 			}
 		}
-		return false // Event'i başka handler'lara geçir
+		return false
 	})
 
-	listBox.AddController(keyController)
+	app.ClipboardItemsList.AddController(keyController)
 }
 
 func (app *Application) setupStyleSupport() {
