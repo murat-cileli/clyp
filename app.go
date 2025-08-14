@@ -15,9 +15,6 @@ import (
 //go:embed main.ui
 var uiXML string
 
-//go:embed style.css
-var cssData string
-
 type Application struct {
 }
 
@@ -31,8 +28,6 @@ func (app *Application) init() {
 }
 
 func (app *Application) activate(gtkApp *gtk.Application) {
-	app.loadCSS()
-
 	builder := gtk.NewBuilderFromString(uiXML)
 	window := builder.GetObject("GtkWindow").Cast().(*gtk.ApplicationWindow)
 
@@ -44,16 +39,6 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 
 	window.SetApplication(gtkApp)
 	window.Show()
-}
-
-func (app *Application) loadCSS() {
-	cssProvider := gtk.NewCSSProvider()
-	cssProvider.LoadFromData(cssData)
-
-	display := gdk.DisplayGetDefault()
-	if display != nil {
-		gtk.StyleContextAddProviderForDisplay(display, cssProvider, gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-	}
 }
 
 func (app *Application) setupListBox(listBox *gtk.ListBox) {
@@ -78,8 +63,6 @@ func (app *Application) setupListBox(listBox *gtk.ListBox) {
 		contentLabel.SetWrap(true)
 		contentLabel.SetWrapMode(pango.WrapWord)
 		contentLabel.SetXAlign(0)
-		contentLabel.SetSelectable(true)
-		contentLabel.AddCSSClass("content-label")
 
 		dateLabel := gtk.NewLabel(items[i].DateTime)
 		dateLabel.SetXAlign(0)
