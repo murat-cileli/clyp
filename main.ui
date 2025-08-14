@@ -2,20 +2,16 @@
 <interface>
   <requires lib="gtk" version="4.0"/>
   <object class="GtkApplicationWindow" id="GtkWindow">
-    <property name="title" translatable="yes">Gnome-1</property>
+    <property name="title" translatable="yes">Clipto</property>
     <property name="default-width">500</property>
     <property name="default-height">600</property>
 
-    <!-- HeaderBar'ı titlebar olarak ayarla -->
     <property name="titlebar">
-      <object class="GtkHeaderBar">
+      <object class="GtkHeaderBar" id="GtkHeaderBar">
+        <style>
+          <class name="flat"/>
+        </style>
         <child type="start">
-          <object class="GtkButton">
-            <property name="icon-name">edit-find-symbolic</property>
-            <property name="tooltip-text" translatable="yes">Search</property>
-          </object>
-        </child>
-        <child type="end">
           <object class="GtkMenuButton">
             <property name="primary">True</property>
             <property name="icon-name">open-menu-symbolic</property>
@@ -23,10 +19,17 @@
             <property name="menu-model">primary_menu</property>
           </object>
         </child>
+        <property name="title-widget">
+          <object class="GtkSearchEntry" id="search_entry">
+            <property name="placeholder-text" translatable="yes"></property>
+            <property name="width-chars">5</property>
+          </object>
+        </property>
+
+
       </object>
     </property>
 
-    <!-- Ana içerik alanı -->
     <property name="child">
       <object class="GtkBox">
         <property name="orientation">1</property>
@@ -35,10 +38,10 @@
         <property name="vexpand">true</property>
         <property name="hexpand">true</property>
         <property name="margin-top">0</property>
-        <property name="margin-bottom">0</property>
-        <property name="margin-start">0</property>
-        <property name="margin-end">0</property>
-        <property name="spacing">0</property>
+        <property name="margin-bottom">12</property>
+        <property name="margin-start">12</property>
+        <property name="margin-end">12</property>
+        <property name="spacing">12</property>
 
         <child>
           <object class="GtkScrolledWindow">
@@ -54,6 +57,9 @@
             <property name="overlay-scrolling">true</property>
             <child>
               <object class="GtkListBox" id="clipboard_list">
+                <style>
+                  <class name="boxed-list"/>
+                </style>
                 <property name="selection-mode">1</property>
                 <property name="halign">fill</property>
                 <property name="valign">start</property>
@@ -70,7 +76,7 @@
   <menu id="primary_menu">
     <section>
       <item>
-        <attribute name="label" translatable="yes">_About Gnome-1</attribute>
+        <attribute name="label" translatable="yes">About</attribute>
         <attribute name="action">app.about</attribute>
       </item>
     </section>

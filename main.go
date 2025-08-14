@@ -12,12 +12,10 @@ var app Application
 
 // ClipboardItem veritabanından okunan clipboard verisini temsil eder
 type ClipboardItem struct {
-	ID          int
-	Type        int
-	IsPinned    int
-	IsEncrypted int
-	Content     string
-	DateTime    string
+	ID       int
+	Type     byte
+	DateTime string
+	Content  string
 }
 
 func main() {
@@ -89,9 +87,10 @@ func getClipboardItems() ([]ClipboardItem, error) {
 	}
 
 	rows, err := db.Query(`
-		SELECT *
+		SELECT id, type, date_time, content
 		FROM clipboard
 		ORDER BY date_time DESC
+		LIMIT 30
 	`)
 	if err != nil {
 		return nil, err
@@ -101,24 +100,11 @@ func getClipboardItems() ([]ClipboardItem, error) {
 	var clipboardItems []ClipboardItem
 	var clipboardItem ClipboardItem
 	for rows.Next() {
-		if err := rows.Scan(&clipboardItem.ID, &clipboardItem.Type, &clipboardItem.DateTime, &clipboardItem.IsPinned, &clipboardItem.Content, &clipboardItem.IsEncrypted); err != nil {
+		if err := rows.Scan(&clipboardItem.ID, &clipboardItem.Type, &clipboardItem.DateTime, &clipboardItem.Content); err != nil {
 			continue
 		}
 		clipboardItems = append(clipboardItems, clipboardItem)
 	}
 
 	return clipboardItems, nil
-}
-
-// createClipboardTable clipboard tablosunu oluşturur
-func createClipboardTable(db *sql.DB) error {
-	query := `
-	CREATE TABLE clipboard (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		content TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	)`
-
-	_, err := db.Exec(query)
-	return err
 }
