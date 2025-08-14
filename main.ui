@@ -2,7 +2,7 @@
 <interface>
   <requires lib="gtk" version="4.0"/>
   <object class="GtkApplicationWindow" id="GtkWindow">
-    <property name="title" translatable="yes">Clipto</property>
+    <property name="title">Clyp</property>
     <property name="default-width">500</property>
     <property name="default-height">600</property>
 
@@ -21,7 +21,7 @@
         </child>
         <property name="title-widget">
           <object class="GtkSearchEntry" id="search_entry">
-            <property name="placeholder-text" translatable="yes"></property>
+            <property name="placeholder-text"></property>
             <property name="width-chars">5</property>
           </object>
         </property>

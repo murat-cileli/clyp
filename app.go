@@ -38,6 +38,7 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 		os.Exit(1)
 	}
 
+	gtkApp.SetApplicationID("bio.murat.clyp")
 	builder := gtk.NewBuilderFromString(uiXML)
 	window := builder.GetObject("GtkWindow").Cast().(*gtk.ApplicationWindow)
 
@@ -59,7 +60,6 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.setupAboutAction(gtkApp, window)
 	window.SetApplication(gtkApp)
 	window.SetVisible(true)
-
 }
 
 func (app *Application) listClipboardItems() {
@@ -149,8 +149,8 @@ func (app *Application) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog.SetLogoIconName("clipboard")
 	aboutDialog.SetModal(true)
 
-	aboutDialog.SetProgramName("Clipto")
-	aboutDialog.SetVersion("1.0.0")
+	aboutDialog.SetVersion("0.9")
+	aboutDialog.SetProgramName("Clyp")
 	aboutDialog.SetComments("Clipboard manager.")
 	aboutDialog.SetCopyright("© 2025")
 	aboutDialog.SetWebsite("https://murat.bio/")

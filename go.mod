@@ -1,4 +1,4 @@
-module murat-cileli/go-gtk4
+module github.com/murat-cileli/clyp
 
 go 1.24.6
 
