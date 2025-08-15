@@ -46,13 +46,8 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	go app.listClipboardItems()
 	//app.setupListBoxEvents()
 
-	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
-	searchEntry.ConnectActivate(func() {
-		log.Println("Enter tuşuna basıldı, arama yapılabilir.")
-	})
-	searchEntry.ConnectSearchChanged(func() {
-		log.Printf("Arama metni değişti: %s", searchEntry.Text())
-	})
+	// Search bar ve search entry kurulumu
+	app.setupSearchBar(builder)
 
 	app.ClipboardItemsVisualLimit = 50
 	app.setupStyleSupport()
@@ -97,6 +92,39 @@ func (app *Application) listClipboardItems() {
 
 		app.ClipboardItemsList.Append(row)
 	}
+}
+
+func (app *Application) setupSearchBar(builder *gtk.Builder) {
+	// Search bar ve search entry'yi al
+	searchBar := builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
+	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
+	searchToggleButton := builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
+
+	// Search bar'ı search entry ile bağla
+	searchBar.ConnectEntry(searchEntry)
+
+	// Toggle button ile search bar'ı bağla
+	searchToggleButton.ConnectToggled(func() {
+		searchBar.SetObjectProperty("search-mode-enabled", searchToggleButton.Active())
+	})
+
+	// Search entry'de arama yapıldığında
+	searchEntry.ConnectSearchChanged(func() {
+		searchText := searchEntry.Text()
+		log.Printf("Arama metni değişti: %s", searchText)
+		// TODO: Arama fonksiyonunu burada çağır
+		app.filterClipboardItems(searchText)
+	})
+
+	// Enter tuşuna basıldığında
+	searchEntry.ConnectActivate(func() {
+		log.Println("Enter tuşuna basıldı, arama yapılabilir.")
+	})
+}
+
+func (app *Application) filterClipboardItems(searchText string) {
+	// TODO: Arama filtresini database'e uygula ve listeyi güncelle
+	log.Printf("Filtreleme yapılacak: %s", searchText)
 }
 
 func (app *Application) setupListBoxEvents() {
