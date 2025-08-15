@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk" version="4.0"/>
-  <object class="GtkApplicationWindow" id="GtkWindow">
+  <object class="GtkApplicationWindow" id="gtk_window">
     <property name="title">Clyp</property>
     <property name="default-width">500</property>
     <property name="default-height">600</property>
     <property name="titlebar">
-      <object class="GtkHeaderBar" id="GtkHeaderBar">
+      <object class="GtkHeaderBar" id="gtk_header_bar">
         <style>
           <class name="flat"/>
         </style>
@@ -27,7 +27,7 @@
       </object>
     </property>
     <property name="child">
-      <object class="GtkBox">
+      <object class="GtkBox" id="gtk_box">
         <property name="orientation">1</property>
         <property name="halign">fill</property>
         <property name="valign">fill</property>

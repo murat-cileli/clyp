@@ -39,14 +39,13 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	}
 
 	builder := gtk.NewBuilderFromString(uiXML)
-	window := builder.GetObject("GtkWindow").Cast().(*gtk.ApplicationWindow)
+	window := builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
 
 	app.ClipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
 	app.ClipboardItemsList.Activate()
 	go app.listClipboardItems()
 	//app.setupListBoxEvents()
 
-	// Search bar ve search entry kurulumu
 	app.setupSearchBar(builder)
 
 	app.ClipboardItemsVisualLimit = 50
@@ -57,11 +56,15 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 }
 
 func (app *Application) listClipboardItems() {
+	app.ClipboardItemsList.RemoveAll()
+
 	items, err := database.ClipboardItems()
 	if err != nil {
 		log.Printf("Veritabanından veri alınırken hata: %v", err)
 		return
 	}
+
+	log.Printf("items: %v", items)
 
 	if len(items) == 0 {
 		// TODO: Boş veri mesajı ekle.
@@ -74,13 +77,13 @@ func (app *Application) listClipboardItems() {
 		box.SetMarginStart(12)
 		box.SetMarginEnd(12)
 
-		contentLabel := gtk.NewLabel(items[i].Content)
+		contentLabel := gtk.NewLabel(items[i].content)
 		contentLabel.SetWrap(true)
 		contentLabel.SetWrapMode(pango.WrapWord)
 		contentLabel.SetXAlign(0)
 		contentLabel.AddCSSClass("title")
 
-		dateLabel := gtk.NewLabel(items[i].DateTime)
+		dateLabel := gtk.NewLabel(items[i].dateTime)
 		dateLabel.SetXAlign(0)
 		dateLabel.AddCSSClass("subtitle")
 
@@ -95,36 +98,19 @@ func (app *Application) listClipboardItems() {
 }
 
 func (app *Application) setupSearchBar(builder *gtk.Builder) {
-	// Search bar ve search entry'yi al
-	searchBar := builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
 	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
-	searchToggleButton := builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
+	searchEntry.ConnectSearchChanged(func() {
+		database.searchFilter = searchEntry.Text()
+		go app.listClipboardItems()
+	})
 
-	// Search bar'ı search entry ile bağla
+	searchBar := builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
 	searchBar.ConnectEntry(searchEntry)
 
-	// Toggle button ile search bar'ı bağla
+	searchToggleButton := builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
 	searchToggleButton.ConnectToggled(func() {
 		searchBar.SetObjectProperty("search-mode-enabled", searchToggleButton.Active())
 	})
-
-	// Search entry'de arama yapıldığında
-	searchEntry.ConnectSearchChanged(func() {
-		searchText := searchEntry.Text()
-		log.Printf("Arama metni değişti: %s", searchText)
-		// TODO: Arama fonksiyonunu burada çağır
-		app.filterClipboardItems(searchText)
-	})
-
-	// Enter tuşuna basıldığında
-	searchEntry.ConnectActivate(func() {
-		log.Println("Enter tuşuna basıldı, arama yapılabilir.")
-	})
-}
-
-func (app *Application) filterClipboardItems(searchText string) {
-	// TODO: Arama filtresini database'e uygula ve listeyi güncelle
-	log.Printf("Filtreleme yapılacak: %s", searchText)
 }
 
 func (app *Application) setupListBoxEvents() {
