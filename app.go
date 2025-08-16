@@ -2,8 +2,8 @@ package main
 
 import (
 	_ "embed"
-	"log"
 	"os"
+	"strconv"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
@@ -13,14 +13,18 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//go:embed main.ui
-var uiXML string
-
-var database Database
+var (
+	//go:embed main.ui
+	uiXML     string
+	database  Database
+	clipboard Clipboard
+)
 
 type Application struct {
-	ClipboardItemsVisualLimit byte
-	ClipboardItemsList        *gtk.ListBox
+	clipboardItemsList *gtk.ListBox
+	window             *gtk.ApplicationWindow
+	name               string
+	itemsVisibleLimit  int
 }
 
 func (app *Application) init() {
@@ -38,52 +42,53 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 		os.Exit(1)
 	}
 
-	builder := gtk.NewBuilderFromString(uiXML)
-	window := builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
+	app.name = "Clyp"
+	app.itemsVisibleLimit = 50
 
-	app.ClipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
-	app.ClipboardItemsList.Activate()
-	go app.listClipboardItems()
+	builder := gtk.NewBuilderFromString(uiXML)
+	app.window = builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
+
+	app.clipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
+	app.clipboardItemsList.Activate()
+	go app.listClipboardItems(true)
 	//app.setupListBoxEvents()
 
 	app.setupSearchBar(builder)
 
-	app.ClipboardItemsVisualLimit = 50
 	app.setupStyleSupport()
-	app.setupAboutAction(gtkApp, window)
-	window.SetApplication(gtkApp)
-	window.SetVisible(true)
+	app.setupAboutAction(gtkApp, app.window)
+	app.window.SetApplication(gtkApp)
+	app.window.SetVisible(true)
 }
 
-func (app *Application) listClipboardItems() {
-	app.ClipboardItemsList.RemoveAll()
+func (app *Application) updateTitle(itemsShowing, itemsTotal string) {
+	app.window.SetTitle(app.name + " - " + itemsShowing + " / " + itemsTotal)
+}
 
-	items, err := database.ClipboardItems()
-	if err != nil {
-		log.Printf("Veritabanından veri alınırken hata: %v", err)
-		return
-	}
-
-	log.Printf("items: %v", items)
+func (app *Application) listClipboardItems(updateItemCount bool) {
+	app.clipboardItemsList.RemoveAll()
+	items, _ := clipboard.items(updateItemCount)
 
 	if len(items) == 0 {
 		// TODO: Boş veri mesajı ekle.
 	}
 
-	for i := 0; i < len(items); i++ {
+	app.updateTitle(strconv.Itoa(len(items)), strconv.Itoa(clipboard.itemCount))
+
+	for _, item := range items {
 		box := gtk.NewBox(gtk.OrientationVertical, 6)
 		box.SetMarginTop(12)
 		box.SetMarginBottom(12)
 		box.SetMarginStart(12)
 		box.SetMarginEnd(12)
 
-		contentLabel := gtk.NewLabel(items[i].content)
+		contentLabel := gtk.NewLabel(item.content)
 		contentLabel.SetWrap(true)
 		contentLabel.SetWrapMode(pango.WrapWord)
 		contentLabel.SetXAlign(0)
 		contentLabel.AddCSSClass("title")
 
-		dateLabel := gtk.NewLabel(items[i].dateTime)
+		dateLabel := gtk.NewLabel(item.dateTime)
 		dateLabel.SetXAlign(0)
 		dateLabel.AddCSSClass("subtitle")
 
@@ -91,9 +96,10 @@ func (app *Application) listClipboardItems() {
 		box.Append(dateLabel)
 
 		row := gtk.NewListBoxRow()
+		row.SetName(string(item.id))
 		row.SetChild(box)
 
-		app.ClipboardItemsList.Append(row)
+		app.clipboardItemsList.Append(row)
 	}
 }
 
@@ -101,7 +107,7 @@ func (app *Application) setupSearchBar(builder *gtk.Builder) {
 	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
 	searchEntry.ConnectSearchChanged(func() {
 		database.searchFilter = searchEntry.Text()
-		go app.listClipboardItems()
+		go app.listClipboardItems(false)
 	})
 
 	searchBar := builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
@@ -114,14 +120,14 @@ func (app *Application) setupSearchBar(builder *gtk.Builder) {
 }
 
 func (app *Application) setupListBoxEvents() {
-	app.ClipboardItemsList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
+	app.clipboardItemsList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
 		//copyRowContentToClipboard(row)
 	})
 
 	keyController := gtk.NewEventControllerKey()
 	keyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
-			selectedRow := app.ClipboardItemsList.SelectedRow()
+			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
 				//copyRowContentToClipboard(selectedRow)
 				return true
@@ -130,7 +136,7 @@ func (app *Application) setupListBoxEvents() {
 		return false
 	})
 
-	app.ClipboardItemsList.AddController(keyController)
+	app.clipboardItemsList.AddController(keyController)
 }
 
 func (app *Application) setupStyleSupport() {
