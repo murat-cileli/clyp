@@ -26,7 +26,7 @@ type Application struct {
 	clipboardItemsList *gtk.ListBox
 	window             *gtk.ApplicationWindow
 	name               string
-	itemsVisibleLimit  int
+	dataDir            string
 }
 
 func (app *Application) init() {
@@ -39,17 +39,17 @@ func (app *Application) init() {
 }
 
 func (app *Application) activate(gtkApp *gtk.Application) {
+	app.setupDataDir()
+
 	if err := database.init(); err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 
 	app.name = "Clyp"
-	app.itemsVisibleLimit = 50
 
 	builder := gtk.NewBuilderFromString(uiXML)
 	app.window = builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
-
 	app.clipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
 	app.updateClipboardRows(true)
 	app.setupClipBoardListEvents()
@@ -60,6 +60,23 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.window.SetVisible(true)
 	clipboard.updateRecentContentFromDatabase()
 	clipboard.watch()
+}
+
+func (app *Application) setupDataDir() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Printf("Failed to get user home dir: %v", err)
+		os.Exit(1)
+	}
+
+	app.dataDir = homeDir + "/.local/share/clyp"
+
+	if _, err := os.Stat(app.dataDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(app.dataDir, 0755); err != nil {
+			log.Printf("Failed to create data dir: %v", err)
+			os.Exit(1)
+		}
+	}
 }
 
 func (app *Application) updateTitle(itemsShowing, itemsTotal string) {

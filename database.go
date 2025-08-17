@@ -23,7 +23,7 @@ func (database *Database) init() error {
 }
 
 func (database *Database) connect() error {
-	dbPath := "./clipboard.db"
+	dbPath := app.dataDir + "/clyp.db"
 
 	var err error
 	database.db, err = sql.Open("sqlite3", dbPath)
@@ -35,5 +35,19 @@ func (database *Database) connect() error {
 		return err
 	}
 
+	database.createDbObjectsIfNotExist()
 	return nil
+}
+
+func (database *Database) createDbObjectsIfNotExist() {
+	database.db.Exec(`
+CREATE TABLE clipboard (
+	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	"type" INTEGER DEFAULT (1) NOT NULL,
+	date_time TEXT DEFAULT (CURRENT_TIMESTAMP) NOT NULL,
+	content TEXT NOT NULL
+);
+CREATE INDEX clipboard_type_IDX ON clipboard ("type",content);
+CREATE UNIQUE INDEX clipboard_content_IDX ON clipboard (content,date_time);
+`)
 }
