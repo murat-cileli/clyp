@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Clyp
+Exec=clyp
+Type=Application
+Terminal=false
+Icon=bio.murat.clyp
+Categories=Utilities;

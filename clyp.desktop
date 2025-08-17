@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Clyp
+TryExec=
+Exec=/home/murat-cileli/Projects/clyp-go/clyp
+Type=Application
+Terminal=false
+Icon=bio.murat.clyp
+Categories=Utilities;

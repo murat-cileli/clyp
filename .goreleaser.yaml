@@ -1,0 +1,34 @@
+version: 2
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: bio.murat.clyp
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+nfpms:
+  - id: bio.murat.clyp
+    section: utils
+    priority: optional
+    maintainer: Murat Çileli <murat.cileli@gmail.com>
+    homepage: https://github.com/murat-cileli/clyp
+    vendor: Murat Çileli
+    license: MIT
+    description: Clipboard manager.
+    formats:
+      - deb
+      - rpm
+      - archlinux

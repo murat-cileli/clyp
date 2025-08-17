@@ -24,13 +24,18 @@ var (
 
 type Application struct {
 	clipboardItemsList *gtk.ListBox
+	searchEntry        *gtk.SearchEntry
+	searchBar          *gtk.SearchBar
+	searchToggleButton *gtk.ToggleButton
 	window             *gtk.ApplicationWindow
 	name               string
+	id                 string
 	dataDir            string
 }
 
 func (app *Application) init() {
-	gtkApp := gtk.NewApplication("bio.murat.clyp", gio.ApplicationFlagsNone)
+	app.id = "bio.murat.clyp"
+	gtkApp := gtk.NewApplication(app.id, gio.ApplicationFlagsNone)
 	gtkApp.ConnectActivate(func() { app.activate(gtkApp) })
 
 	if code := gtkApp.Run(os.Args); code > 0 {
@@ -47,17 +52,20 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	}
 
 	app.name = "Clyp"
-
 	builder := gtk.NewBuilderFromString(uiXML)
 	app.window = builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
 	app.clipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
+	app.searchEntry = builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
+	app.searchBar = builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
+	app.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
 	app.updateClipboardRows(true)
-	app.setupClipBoardListEvents()
-	app.setupSearchBar(builder)
+	app.setupEvents()
+	app.setupSearchBar()
 	app.setupStyleSupport()
-	app.setupAboutAction(gtkApp, app.window)
+	app.setupAboutAction(gtkApp)
 	app.window.SetApplication(gtkApp)
 	app.window.SetVisible(true)
+	app.window.SetIconName("bio.murat.clyp")
 	clipboard.updateRecentContentFromDatabase()
 	clipboard.watch()
 }
@@ -69,7 +77,7 @@ func (app *Application) setupDataDir() {
 		os.Exit(1)
 	}
 
-	app.dataDir = homeDir + "/.local/share/clyp"
+	app.dataDir = homeDir + "/.local/share/" + app.id
 
 	if _, err := os.Stat(app.dataDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(app.dataDir, 0755); err != nil {
@@ -146,7 +154,7 @@ func (app *Application) addImageRow(item ClipboardItem) {
 	box.SetMarginTop(0)
 	box.SetMarginBottom(0)
 	box.SetMarginStart(12)
-	box.SetMarginEnd(0)
+	box.SetMarginEnd(12)
 
 	if len(item.content) == 0 {
 		log.Printf("Empty content for image item %d", item.id)
@@ -163,8 +171,10 @@ func (app *Application) addImageRow(item ClipboardItem) {
 		} else {
 			paintable := gdk.Paintabler(texture)
 			image := gtk.NewImageFromPaintable(paintable)
-			image.SetHAlign(gtk.AlignFill)
-			image.SetVAlign(gtk.AlignFill)
+			image.SetHAlign(gtk.AlignCenter)
+			image.SetVAlign(gtk.AlignCenter)
+			image.SetHExpand(false)
+			image.SetVExpand(false)
 			app.scaleImageToFit(image, texture, 300)
 			box.Append(image)
 		}
@@ -197,40 +207,129 @@ func (app *Application) loadImageFromBase64(base64Data string) *gdk.Texture {
 	return texture
 }
 
-func (app *Application) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, maxHeight int) {
+func (app *Application) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, maxSize int) {
 	width := texture.Width()
 	height := texture.Height()
 
-	if height > maxHeight {
-		ratio := float64(maxHeight) / float64(height)
+	if height > maxSize {
+		ratio := float64(maxSize) / float64(height)
 		newWidth := int(float64(width) * ratio)
-		newHeight := maxHeight
+		newHeight := maxSize
+		image.SetSizeRequest(newWidth, newHeight)
+	} else if width > maxSize {
+		ratio := float64(maxSize) / float64(width)
+		newWidth := maxSize
+		newHeight := int(float64(height) * ratio)
 		image.SetSizeRequest(newWidth, newHeight)
 	} else {
 		image.SetSizeRequest(width, height)
 	}
 }
 
-func (app *Application) setupSearchBar(builder *gtk.Builder) {
-	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
-	searchEntry.ConnectSearchChanged(func() {
-		database.searchFilter = searchEntry.Text()
+func (app *Application) setupSearchBar() {
+	app.searchEntry.ConnectSearchChanged(func() {
+		database.searchFilter = app.searchEntry.Text()
 		app.updateClipboardRows(false)
 	})
-
-	searchBar := builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
-	searchBar.ConnectEntry(searchEntry)
-
-	searchToggleButton := builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
-	searchToggleButton.ConnectToggled(func() {
-		searchBar.SetObjectProperty("search-mode-enabled", searchToggleButton.Active())
+	app.searchBar.ConnectEntry(app.searchEntry)
+	app.searchToggleButton.ConnectToggled(func() {
+		app.searchBar.SetObjectProperty("search-mode-enabled", app.searchToggleButton.Active())
 	})
 }
 
-func (app *Application) setupClipBoardListEvents() {
+/*
+func (app *Application) setupSearchShortcut(searchBar *gtk.SearchBar, searchToggleButton *gtk.ToggleButton, searchEntry *gtk.SearchEntry) {
 	keyController := gtk.NewEventControllerKey()
-
 	keyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
+		if state&gdk.ControlMask != 0 && keyval == gdk.KEY_f {
+			currentState := searchToggleButton.Active()
+			newState := !currentState
+			searchToggleButton.SetActive(newState)
+			searchBar.SetObjectProperty("search-mode-enabled", newState)
+			if newState {
+				searchEntry.GrabFocus()
+			}
+			return true
+		}
+
+		if keyval == gdk.KEY_Up || keyval == gdk.KEY_KP_Up || keyval == gdk.KEY_Down || keyval == gdk.KEY_KP_Down {
+			app.clipboardItemsList.GrabFocus()
+			return true
+		}
+
+		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
+			return false
+		}
+
+		if state&(gdk.ControlMask|gdk.AltMask|gdk.SuperMask) != 0 {
+			return false
+		}
+
+		if app.isSpecialKey(keyval) {
+			return false
+		}
+
+		if !searchToggleButton.Active() {
+			searchToggleButton.SetActive(true)
+			searchBar.SetObjectProperty("search-mode-enabled", true)
+			searchEntry.GrabFocus()
+		}
+
+		return false
+	})
+
+	app.window.AddController(keyController)
+	app.clipboardItemsList.AddController(keyController)
+}
+
+func (app *Application) isSpecialKey(keyval uint) bool {
+	// Fonksiyon tuşları (F1-F12)
+	if keyval >= gdk.KEY_F1 && keyval <= gdk.KEY_F12 {
+		return true
+	}
+
+	// Navigasyon tuşları
+	specialKeys := []uint{
+		gdk.KEY_Escape,
+		gdk.KEY_Tab,
+		gdk.KEY_ISO_Left_Tab,
+		gdk.KEY_BackSpace,
+		gdk.KEY_Delete,
+		gdk.KEY_Insert,
+		gdk.KEY_Home,
+		gdk.KEY_End,
+		gdk.KEY_Page_Up,
+		gdk.KEY_Page_Down,
+		gdk.KEY_Left,
+		gdk.KEY_Right,
+		gdk.KEY_KP_Left,
+		gdk.KEY_KP_Right,
+		gdk.KEY_Menu,
+		gdk.KEY_Print,
+		gdk.KEY_Pause,
+		gdk.KEY_Scroll_Lock,
+		gdk.KEY_Caps_Lock,
+		gdk.KEY_Num_Lock,
+	}
+
+	for _, key := range specialKeys {
+		if keyval == key {
+			return true
+		}
+	}
+
+	return false
+}
+*/
+
+func (app *Application) setupEvents() {
+	app.setupClipBoardListEvents()
+}
+
+func (app *Application) setupClipBoardListEvents() {
+	clipboardListkeyController := gtk.NewEventControllerKey()
+
+	clipboardListkeyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
 			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
@@ -249,7 +348,7 @@ func (app *Application) setupClipBoardListEvents() {
 		return false
 	})
 
-	app.clipboardItemsList.AddController(keyController)
+	app.clipboardItemsList.AddController(clipboardListkeyController)
 }
 
 func (app *Application) setupStyleSupport() {
@@ -265,10 +364,10 @@ func (app *Application) handleStyleChange(gtkSettings *gtk.Settings, gnomeSettin
 	gtkSettings.SetObjectProperty("gtk-application-prefer-dark-theme", gnomeSettings.String("color-scheme") == "prefer-dark")
 }
 
-func (app *Application) setupAboutAction(gtkApp *gtk.Application, window *gtk.ApplicationWindow) {
+func (app *Application) setupAboutAction(gtkApp *gtk.Application) {
 	aboutAction := gio.NewSimpleAction("about", nil)
 	aboutAction.ConnectActivate(func(parameter *glib.Variant) {
-		app.showAboutDialog(window)
+		app.showAboutDialog(app.window)
 	})
 	gtkApp.AddAction(aboutAction)
 }
@@ -276,17 +375,17 @@ func (app *Application) setupAboutAction(gtkApp *gtk.Application, window *gtk.Ap
 func (app *Application) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog := gtk.NewAboutDialog()
 	aboutDialog.SetTransientFor(&parent.Window)
-	aboutDialog.SetLogoIconName("clipboard")
+	//iconTexture := app.loadImageFromBase64(base64.StdEncoding.EncodeToString(appIcon))
+	//if iconTexture != nil {
+	//	aboutDialog.SetLogo(gdk.Paintabler(iconTexture))
+	//}
+	aboutDialog.SetLogoIconName("bio.murat.clyp")
 	aboutDialog.SetModal(true)
-
 	aboutDialog.SetVersion("0.9")
 	aboutDialog.SetProgramName("Clyp")
-	aboutDialog.SetComments("Clipboard manager.")
-	aboutDialog.SetCopyright("© 2025")
-	aboutDialog.SetWebsite("https://murat.bio/")
-	aboutDialog.SetWebsiteLabel("https://murat.bio")
-	aboutDialog.SetLicense("MIT License")
-	aboutDialog.SetAuthors([]string{"Murat Çileli"})
+	aboutDialog.SetCopyright("Developer: Murat Çileli")
+	aboutDialog.SetWebsite("https://github.com/murat-cileli/clyp")
+	aboutDialog.SetWebsiteLabel("https://github.com/murat-cileli/clyp")
 
 	aboutDialog.SetVisible(true)
 }

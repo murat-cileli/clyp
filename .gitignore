@@ -1,2 +1,4 @@
 clyp
 clyp-go
+# Added by goreleaser init:
+dist/

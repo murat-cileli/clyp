@@ -5,6 +5,7 @@
     <property name="title">Clyp</property>
     <property name="default-width">500</property>
     <property name="default-height">600</property>
+    <property name="icon-name">bio.murat.clyp</property>
     <property name="titlebar">
       <object class="GtkHeaderBar" id="gtk_header_bar">
         <style>
@@ -12,7 +13,7 @@
         </style>
         <child type="start">
           <object class="GtkMenuButton">
-            <property name="primary">True</property>
+            <property name="can-focus">false</property>
             <property name="icon-name">open-menu-symbolic</property>
             <property name="tooltip-text" translatable="yes">Main Menu</property>
             <property name="menu-model">primary_menu</property>
@@ -20,6 +21,7 @@
         </child>
         <child type="start">
           <object class="GtkToggleButton" id="search_toggle_button">
+            <property name="can-focus">false</property>
             <property name="icon-name">system-search-symbolic</property>
             <property name="tooltip-text" translatable="yes">Search</property>
           </object>
@@ -42,6 +44,7 @@
           <object class="GtkSearchBar" id="search_bar">
             <child>
               <object class="GtkSearchEntry" id="search_entry">
+                <property name="can-focus">true</property>
                 <property name="halign">center</property>
               </object>
             </child>
@@ -61,6 +64,7 @@
             <property name="overlay-scrolling">true</property>
             <child>
               <object class="GtkListBox" id="clipboard_list">
+                <property name="can-focus">true</property>
                 <style>
                   <class name="boxed-list"/>
                 </style>
