@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"log"
 	"strings"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
@@ -151,6 +152,50 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 		app.updateClipboardRows(true)
 		clipboard.recentContent = content
 	}
+}
+
+func (clipboard *Clipboard) copy(id string) {
+	if id == "" {
+		return
+	}
+
+	var content string
+	var itemType byte
+	row := database.db.QueryRow("SELECT content, type FROM clipboard WHERE id=? LIMIT 1", id)
+	row.Scan(&content, &itemType)
+
+	switch itemType {
+	case 1:
+		clipboard.clipboard.SetText(content)
+		clipboard.updateItemDateTime(id)
+	case 2:
+		decoded, err := base64.StdEncoding.DecodeString(content)
+		if err != nil {
+			log.Printf("Failed to decode base64 image data: %v", err)
+			return
+		}
+		texture, err := gdk.NewTextureFromBytes(glib.NewBytesWithGo(decoded))
+		if err != nil {
+			log.Printf("Failed to create texture from bytes: %v", err)
+			return
+		}
+		clipboard.clipboard.SetTexture(texture)
+		clipboard.updateItemDateTime(id)
+	}
+}
+
+func (clipboard *Clipboard) updateItemDateTime(id string) {
+	if id == "" {
+		return
+	}
+
+	_, err := database.db.Exec("UPDATE clipboard SET date_time=CURRENT_TIMESTAMP WHERE id=?", id)
+	if err != nil {
+		log.Printf("Failed to update item date time: %v", err)
+		return
+	}
+
+	app.updateClipboardRows(true)
 }
 
 func (clipboard *Clipboard) removeFromDatabase(id string) {

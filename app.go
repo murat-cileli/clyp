@@ -118,6 +118,9 @@ func (app *Application) addTextRow(item ClipboardItem) {
 	box.SetMarginStart(12)
 	box.SetMarginEnd(12)
 
+	if len(item.content) > 100 {
+		item.content = item.content[:100] + "\n..."
+	}
 	contentLabel := gtk.NewLabel(item.content)
 	contentLabel.SetWrap(true)
 	contentLabel.SetWrapMode(pango.WrapWord)
@@ -225,17 +228,13 @@ func (app *Application) setupSearchBar(builder *gtk.Builder) {
 }
 
 func (app *Application) setupClipBoardListEvents() {
-	app.clipboardItemsList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
-		//copyRowContentToClipboard(row)
-	})
-
 	keyController := gtk.NewEventControllerKey()
 
 	keyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
 			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
-				//copyRowContentToClipboard(selectedRow)
+				clipboard.copy(selectedRow.Name())
 				return true
 			}
 		}

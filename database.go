@@ -19,6 +19,7 @@ func (database *Database) init() error {
 	if err := database.connect(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -35,11 +36,12 @@ func (database *Database) connect() error {
 		return err
 	}
 
-	database.createDbObjectsIfNotExist()
+	database.create()
+
 	return nil
 }
 
-func (database *Database) createDbObjectsIfNotExist() {
+func (database *Database) create() {
 	database.db.Exec(`
 CREATE TABLE clipboard (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
