@@ -37,6 +37,7 @@ func (app *Application) init() {
 	app.id = "bio.murat.clyp"
 	gtkApp := gtk.NewApplication(app.id, gio.ApplicationFlagsNone)
 	gtkApp.ConnectActivate(func() { app.activate(gtkApp) })
+	gtkApp.ConnectShutdown(func() { app.shutdown(gtkApp) })
 
 	if code := gtkApp.Run(os.Args); code > 0 {
 		os.Exit(code)
@@ -66,8 +67,44 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.window.SetApplication(gtkApp)
 	app.window.SetVisible(true)
 	app.window.SetIconName("bio.murat.clyp")
+	app.window.ConnectCloseRequest(func() bool {
+		app.shutdown(gtkApp)
+		return true
+	})
 	clipboard.updateRecentContentFromDatabase()
 	clipboard.watch()
+}
+
+func (app *Application) shutdown(gtkApp *gtk.Application) {
+	confirmDialog := gtk.NewMessageDialog(
+		gtkApp.ActiveWindow(),
+		gtk.DialogModal|gtk.DialogDestroyWithParent,
+		gtk.MessageQuestion,
+		gtk.ButtonsYesNo,
+	)
+	confirmDialog.SetTitle("Warning")
+	confirmDialog.Buildable.SetObjectProperty("text", "Clipboard will not be monitored.")
+	confirmDialog.Buildable.SetObjectProperty("use-markup", true)
+	confirmDialog.Buildable.SetObjectProperty("secondary-text", "Are you sure you want to quit?")
+	confirmDialog.Buildable.SetObjectProperty("secondary-use-markup", true)
+	confirmDialog.Buildable.SetObjectProperty("modal", true)
+	confirmDialog.Buildable.SetObjectProperty("resizable", false)
+	confirmDialog.Buildable.SetObjectProperty("deletable", false)
+
+	confirmDialog.SetTransientFor(gtkApp.ActiveWindow())
+	confirmDialog.SetVisible(true)
+	confirmDialog.ConnectResponse(func(response int) {
+		switch response {
+		case int(gtk.ResponseYes):
+			if database.db != nil {
+				database.db.Close()
+			}
+			gtkApp.Quit()
+		case int(gtk.ResponseNo):
+			confirmDialog.Close()
+			return
+		}
+	})
 }
 
 func (app *Application) setupDataDir() {
