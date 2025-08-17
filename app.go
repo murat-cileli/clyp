@@ -90,7 +90,6 @@ func (app *Application) shutdown(gtkApp *gtk.Application) {
 	confirmDialog.Buildable.SetObjectProperty("modal", true)
 	confirmDialog.Buildable.SetObjectProperty("resizable", false)
 	confirmDialog.Buildable.SetObjectProperty("deletable", false)
-
 	confirmDialog.SetTransientFor(gtkApp.ActiveWindow())
 	confirmDialog.SetVisible(true)
 	confirmDialog.ConnectResponse(func(response int) {
@@ -136,11 +135,9 @@ func (app *Application) updateClipboardRows(updateItemCount bool) {
 		return
 	}
 
-	log.Printf("Retrieved %d items from database", len(items))
 	app.updateTitle(strconv.Itoa(len(items)), strconv.Itoa(clipboard.itemCount))
 
 	if len(items) == 0 {
-		log.Printf("No items to display")
 		return
 	}
 
