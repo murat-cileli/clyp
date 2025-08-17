@@ -79,8 +79,65 @@
       </object>
     </property>
   </object>
+   <object class="GtkShortcutsWindow" id="shortcuts">
+    <property name="modal">1</property>
+    <child>
+      <object class="GtkShortcutsSection">
+        <property name="section-name">shortcuts</property>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Main Window</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="accelerator">&lt;CTRL&gt;f</property>
+                <property name="title" translatable="yes">Toggle Search Bar</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Items List</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="accelerator">Return</property>
+                <property name="title" translatable="yes">Copy selected item</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="accelerator">Delete</property>
+                <property name="title" translatable="yes">Delete selected item</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Search Entry</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="accelerator">Return</property>
+                <property name="title" translatable="yes">Select first item</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="accelerator">Escape</property>
+                <property name="title" translatable="yes">Clear search entry</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
   <menu id="primary_menu">
     <section>
+      <item>
+        <attribute name="label" translatable="yes">Shortcuts</attribute>
+        <attribute name="action">app.shortcuts</attribute>
+      </item>
       <item>
         <attribute name="label" translatable="yes">About</attribute>
         <attribute name="action">app.about</attribute>

@@ -61,6 +61,7 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.updateClipboardRows(true)
 	app.setupEvents()
 	app.setupStyleSupport()
+	app.setupShortcutsAction(gtkApp)
 	app.setupAboutAction(gtkApp)
 	app.window.SetApplication(gtkApp)
 	app.window.SetVisible(true)
@@ -320,6 +321,22 @@ func (app *Application) setupStyleSupport() {
 
 func (app *Application) handleStyleChange(gtkSettings *gtk.Settings, gnomeSettings *gio.Settings) {
 	gtkSettings.SetObjectProperty("gtk-application-prefer-dark-theme", gnomeSettings.String("color-scheme") == "prefer-dark")
+}
+
+func (app *Application) setupShortcutsAction(gtkApp *gtk.Application) {
+	shortcutsAction := gio.NewSimpleAction("shortcuts", nil)
+	shortcutsAction.ConnectActivate(func(parameter *glib.Variant) {
+		app.showShortcutsWindow(app.window)
+	})
+	gtkApp.AddAction(shortcutsAction)
+}
+
+func (app *Application) showShortcutsWindow(parent *gtk.ApplicationWindow) {
+	builder := gtk.NewBuilderFromString(uiXML)
+	shortcutsWindow := builder.GetObject("shortcuts").Cast().(*gtk.ShortcutsWindow)
+	shortcutsWindow.SetTransientFor(&parent.Window)
+	shortcutsWindow.SetModal(true)
+	shortcutsWindow.SetVisible(true)
 }
 
 func (app *Application) setupAboutAction(gtkApp *gtk.Application) {
