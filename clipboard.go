@@ -1,17 +1,27 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"encoding/base64"
+	"strings"
+
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 )
 
 type Clipboard struct {
-	itemCount int
+	clipboard     *gdk.Clipboard
+	itemCount     int
+	recentContent string
 }
 
 type ClipboardItem struct {
 	id       int
 	dateTime string
 	content  string
+	itemType byte
 }
 
 func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error) {
@@ -20,7 +30,7 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 	var err error
 
 	if database.searchFilter != "" {
-		database.query = `SELECT id, content, date_time FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 50`
+		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 50`
 		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%")
 	} else {
 		database.query = database.queryBase
@@ -34,7 +44,7 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 
 	for rows.Next() {
 		var item ClipboardItem
-		if err := rows.Scan(&item.id, &item.content, &item.dateTime); err != nil {
+		if err := rows.Scan(&item.id, &item.itemType, &item.dateTime, &item.content); err != nil {
 			return nil, err
 		}
 		items = append(items, item)
@@ -50,4 +60,105 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 func (clipboard *Clipboard) count() {
 	rowTotalItemsCount := database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard")
 	rowTotalItemsCount.Scan(&clipboard.itemCount)
+}
+
+func (clipboard *Clipboard) watch() {
+	clipboard.clipboard = gdk.DisplayGetDefault().Clipboard()
+	clipboard.clipboard.ConnectChanged(func() {
+		formats := clipboard.clipboard.Formats().String()
+		if formats == "" {
+			return
+		}
+		if strings.Contains(formats, "text/") {
+			clipboard.readTextContent()
+		} else if strings.Contains(formats, "image/") {
+			clipboard.readImageContent()
+		}
+	})
+}
+
+func (clipboard *Clipboard) readTextContent() {
+	clipboard.clipboard.ReadTextAsync(context.Background(), func(result gio.AsyncResulter) {
+		text, err := clipboard.clipboard.ReadTextFinish(result)
+		if err != nil {
+			return
+		}
+		text = strings.TrimSpace(text)
+		if text != "" {
+			clipboard.saveToDatabase(text, 1)
+		}
+	})
+}
+
+func (clipboard *Clipboard) readImageContent() {
+	clipboard.clipboard.ReadTextureAsync(context.Background(), func(result gio.AsyncResulter) {
+		texture, err := clipboard.clipboard.ReadTextureFinish(result)
+		if err != nil || texture == nil {
+			return
+		}
+
+		imageData := clipboard.textureToBase64(texture)
+
+		if imageData == "" {
+			return
+		}
+
+		clipboard.saveToDatabase(imageData, 2)
+	})
+}
+
+func (clipboard *Clipboard) textureToBase64(texture gdk.Texturer) string {
+	var pngBytes *glib.Bytes
+
+	if memTexture, ok := texture.(*gdk.MemoryTexture); ok {
+		pngBytes = memTexture.SaveToPNGBytes()
+	} else if gdkTexture, ok := texture.(*gdk.Texture); ok {
+		pngBytes = gdkTexture.SaveToPNGBytes()
+	} else {
+		if textureSaver, ok := texture.(interface{ SaveToPNGBytes() *glib.Bytes }); ok {
+			pngBytes = textureSaver.SaveToPNGBytes()
+		} else {
+			return ""
+		}
+	}
+
+	if pngBytes == nil {
+		return ""
+	}
+
+	pngData := pngBytes.Data()
+	if len(pngData) == 0 {
+		return ""
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(pngData)
+
+	return encoded
+}
+
+func (clipboard *Clipboard) updateRecentContentFromDatabase() {
+	contentRow := database.db.QueryRow("SELECT content FROM clipboard ORDER BY id DESC LIMIT 1")
+	contentRow.Scan(&clipboard.recentContent)
+}
+
+func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
+	if len(content) == 0 || content == clipboard.recentContent {
+		return
+	}
+
+	_, err := database.db.Exec("INSERT INTO clipboard (content, type) VALUES (?, ?)", content, itemType)
+	if err == nil {
+		app.updateClipboardRows(true)
+		clipboard.recentContent = content
+	}
+}
+
+func (clipboard *Clipboard) removeFromDatabase(id string) {
+	if id == "" {
+		return
+	}
+	_, err := database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
+	if err == nil {
+		app.updateClipboardRows(true)
+	}
 }

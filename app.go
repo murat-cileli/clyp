@@ -2,6 +2,8 @@ package main
 
 import (
 	_ "embed"
+	"encoding/base64"
+	"log"
 	"os"
 	"strconv"
 
@@ -49,57 +51,143 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.window = builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
 
 	app.clipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
-	app.clipboardItemsList.Activate()
-	go app.listClipboardItems(true)
-	//app.setupListBoxEvents()
-
+	app.updateClipboardRows(true)
+	app.setupClipBoardListEvents()
 	app.setupSearchBar(builder)
-
 	app.setupStyleSupport()
 	app.setupAboutAction(gtkApp, app.window)
 	app.window.SetApplication(gtkApp)
 	app.window.SetVisible(true)
+	clipboard.updateRecentContentFromDatabase()
+	clipboard.watch()
 }
 
 func (app *Application) updateTitle(itemsShowing, itemsTotal string) {
 	app.window.SetTitle(app.name + " - " + itemsShowing + " / " + itemsTotal)
 }
 
-func (app *Application) listClipboardItems(updateItemCount bool) {
+func (app *Application) updateClipboardRows(updateItemCount bool) {
 	app.clipboardItemsList.RemoveAll()
-	items, _ := clipboard.items(updateItemCount)
-
-	if len(items) == 0 {
-		// TODO: Boş veri mesajı ekle.
+	items, err := clipboard.items(updateItemCount)
+	if err != nil {
+		log.Printf("Error getting clipboard items: %v", err)
+		return
 	}
 
+	log.Printf("Retrieved %d items from database", len(items))
 	app.updateTitle(strconv.Itoa(len(items)), strconv.Itoa(clipboard.itemCount))
 
+	if len(items) == 0 {
+		log.Printf("No items to display")
+		return
+	}
+
 	for _, item := range items {
-		box := gtk.NewBox(gtk.OrientationVertical, 6)
-		box.SetMarginTop(12)
-		box.SetMarginBottom(12)
-		box.SetMarginStart(12)
-		box.SetMarginEnd(12)
+		switch item.itemType {
+		case 1:
+			app.addTextRow(item)
+		case 2:
+			app.addImageRow(item)
+		default:
+			log.Printf("Unknown item type: %d", item.itemType)
+		}
+	}
+}
 
-		contentLabel := gtk.NewLabel(item.content)
-		contentLabel.SetWrap(true)
-		contentLabel.SetWrapMode(pango.WrapWord)
-		contentLabel.SetXAlign(0)
-		contentLabel.AddCSSClass("title")
+func (app *Application) addTextRow(item ClipboardItem) {
+	box := gtk.NewBox(gtk.OrientationVertical, 6)
+	box.SetMarginTop(12)
+	box.SetMarginBottom(12)
+	box.SetMarginStart(12)
+	box.SetMarginEnd(12)
 
-		dateLabel := gtk.NewLabel(item.dateTime)
-		dateLabel.SetXAlign(0)
-		dateLabel.AddCSSClass("subtitle")
+	contentLabel := gtk.NewLabel(item.content)
+	contentLabel.SetWrap(true)
+	contentLabel.SetWrapMode(pango.WrapWord)
+	contentLabel.SetXAlign(0)
+	contentLabel.AddCSSClass("title")
 
-		box.Append(contentLabel)
-		box.Append(dateLabel)
+	dateLabel := gtk.NewLabel(item.dateTime)
+	dateLabel.SetXAlign(0)
+	dateLabel.AddCSSClass("subtitle")
 
-		row := gtk.NewListBoxRow()
-		row.SetName(string(item.id))
-		row.SetChild(box)
+	box.Append(contentLabel)
+	box.Append(dateLabel)
 
-		app.clipboardItemsList.Append(row)
+	row := gtk.NewListBoxRow()
+	row.SetName(strconv.Itoa(item.id))
+	row.SetChild(box)
+
+	app.clipboardItemsList.Append(row)
+}
+
+func (app *Application) addImageRow(item ClipboardItem) {
+	box := gtk.NewBox(gtk.OrientationVertical, 0)
+	box.SetMarginTop(0)
+	box.SetMarginBottom(0)
+	box.SetMarginStart(12)
+	box.SetMarginEnd(0)
+
+	if len(item.content) == 0 {
+		log.Printf("Empty content for image item %d", item.id)
+		image := gtk.NewImageFromIconName("image-missing")
+		image.SetPixelSize(64)
+		box.Append(image)
+	} else {
+		texture := app.loadImageFromBase64(item.content)
+		if texture == nil {
+			log.Printf("Failed to load image from base64 for item %d", item.id)
+			image := gtk.NewImageFromIconName("image-missing")
+			image.SetPixelSize(64)
+			box.Append(image)
+		} else {
+			paintable := gdk.Paintabler(texture)
+			image := gtk.NewImageFromPaintable(paintable)
+			image.SetHAlign(gtk.AlignFill)
+			image.SetVAlign(gtk.AlignFill)
+			app.scaleImageToFit(image, texture, 300)
+			box.Append(image)
+		}
+	}
+
+	dateLabel := gtk.NewLabel(item.dateTime)
+	dateLabel.SetXAlign(0)
+	dateLabel.AddCSSClass("subtitle")
+	box.Append(dateLabel)
+
+	row := gtk.NewListBoxRow()
+	row.SetName(strconv.Itoa(item.id))
+	row.SetChild(box)
+
+	app.clipboardItemsList.Append(row)
+}
+
+func (app *Application) loadImageFromBase64(base64Data string) *gdk.Texture {
+	imageData, err := base64.StdEncoding.DecodeString(base64Data)
+	if err != nil {
+		log.Printf("Failed to decode base64 image data: %v", err)
+		return nil
+	}
+
+	texture, err := gdk.NewTextureFromBytes(glib.NewBytesWithGo(imageData))
+	if err != nil {
+		return nil
+	}
+
+	return texture
+}
+
+func (app *Application) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, maxHeight int) {
+	width := texture.Width()
+	height := texture.Height()
+
+	if height > maxHeight {
+		ratio := float64(maxHeight) / float64(height)
+		newWidth := int(float64(width) * ratio)
+		newHeight := maxHeight
+		image.SetSizeRequest(newWidth, newHeight)
+	} else {
+		image.SetSizeRequest(width, height)
 	}
 }
 
@@ -107,7 +195,7 @@ func (app *Application) setupSearchBar(builder *gtk.Builder) {
 	searchEntry := builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
 	searchEntry.ConnectSearchChanged(func() {
 		database.searchFilter = searchEntry.Text()
-		go app.listClipboardItems(false)
+		app.updateClipboardRows(false)
 	})
 
 	searchBar := builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
@@ -119,12 +207,13 @@ func (app *Application) setupSearchBar(builder *gtk.Builder) {
 	})
 }
 
-func (app *Application) setupListBoxEvents() {
+func (app *Application) setupClipBoardListEvents() {
 	app.clipboardItemsList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
 		//copyRowContentToClipboard(row)
 	})
 
 	keyController := gtk.NewEventControllerKey()
+
 	keyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
 			selectedRow := app.clipboardItemsList.SelectedRow()
@@ -133,6 +222,14 @@ func (app *Application) setupListBoxEvents() {
 				return true
 			}
 		}
+
+		if keyval == gdk.KEY_Delete {
+			selectedRow := app.clipboardItemsList.SelectedRow()
+			if selectedRow != nil {
+				clipboard.removeFromDatabase(selectedRow.Name())
+			}
+		}
+
 		return false
 	})
 

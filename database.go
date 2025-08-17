@@ -15,7 +15,7 @@ type Database struct {
 
 func (database *Database) init() error {
 	database.searchFilter = ""
-	database.queryBase = "SELECT id, content, date_time FROM clipboard ORDER BY date_time DESC LIMIT 50"
+	database.queryBase = "SELECT id, type, date_time, content FROM clipboard ORDER BY date_time DESC LIMIT 50"
 	if err := database.connect(); err != nil {
 		return err
 	}
