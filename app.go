@@ -333,17 +333,12 @@ func (app *Application) setupAboutAction(gtkApp *gtk.Application) {
 func (app *Application) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog := gtk.NewAboutDialog()
 	aboutDialog.SetTransientFor(&parent.Window)
-	//iconTexture := app.loadImageFromBase64(base64.StdEncoding.EncodeToString(appIcon))
-	//if iconTexture != nil {
-	//	aboutDialog.SetLogo(gdk.Paintabler(iconTexture))
-	//}
 	aboutDialog.SetLogoIconName("bio.murat.clyp")
 	aboutDialog.SetModal(true)
-	aboutDialog.SetVersion("0.9")
+	aboutDialog.SetVersion("0.9.0")
 	aboutDialog.SetProgramName("Clyp")
-	aboutDialog.SetCopyright("Developer: Murat Çileli")
+	aboutDialog.SetCopyright("Developer: Murat Çileli\nIcon: Freepik from flaticon.com")
 	aboutDialog.SetWebsite("https://github.com/murat-cileli/clyp")
 	aboutDialog.SetWebsiteLabel("https://github.com/murat-cileli/clyp")
-
 	aboutDialog.SetVisible(true)
 }
