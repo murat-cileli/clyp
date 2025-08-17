@@ -60,7 +60,6 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
 	app.updateClipboardRows(true)
 	app.setupEvents()
-	app.setupSearchBar()
 	app.setupStyleSupport()
 	app.setupAboutAction(gtkApp)
 	app.window.SetApplication(gtkApp)
@@ -226,104 +225,10 @@ func (app *Application) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, 
 	}
 }
 
-func (app *Application) setupSearchBar() {
-	app.searchEntry.ConnectSearchChanged(func() {
-		database.searchFilter = app.searchEntry.Text()
-		app.updateClipboardRows(false)
-	})
-	app.searchBar.ConnectEntry(app.searchEntry)
-	app.searchToggleButton.ConnectToggled(func() {
-		app.searchBar.SetObjectProperty("search-mode-enabled", app.searchToggleButton.Active())
-	})
-}
-
-/*
-func (app *Application) setupSearchShortcut(searchBar *gtk.SearchBar, searchToggleButton *gtk.ToggleButton, searchEntry *gtk.SearchEntry) {
-	keyController := gtk.NewEventControllerKey()
-	keyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
-		if state&gdk.ControlMask != 0 && keyval == gdk.KEY_f {
-			currentState := searchToggleButton.Active()
-			newState := !currentState
-			searchToggleButton.SetActive(newState)
-			searchBar.SetObjectProperty("search-mode-enabled", newState)
-			if newState {
-				searchEntry.GrabFocus()
-			}
-			return true
-		}
-
-		if keyval == gdk.KEY_Up || keyval == gdk.KEY_KP_Up || keyval == gdk.KEY_Down || keyval == gdk.KEY_KP_Down {
-			app.clipboardItemsList.GrabFocus()
-			return true
-		}
-
-		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
-			return false
-		}
-
-		if state&(gdk.ControlMask|gdk.AltMask|gdk.SuperMask) != 0 {
-			return false
-		}
-
-		if app.isSpecialKey(keyval) {
-			return false
-		}
-
-		if !searchToggleButton.Active() {
-			searchToggleButton.SetActive(true)
-			searchBar.SetObjectProperty("search-mode-enabled", true)
-			searchEntry.GrabFocus()
-		}
-
-		return false
-	})
-
-	app.window.AddController(keyController)
-	app.clipboardItemsList.AddController(keyController)
-}
-
-func (app *Application) isSpecialKey(keyval uint) bool {
-	// Fonksiyon tuşları (F1-F12)
-	if keyval >= gdk.KEY_F1 && keyval <= gdk.KEY_F12 {
-		return true
-	}
-
-	// Navigasyon tuşları
-	specialKeys := []uint{
-		gdk.KEY_Escape,
-		gdk.KEY_Tab,
-		gdk.KEY_ISO_Left_Tab,
-		gdk.KEY_BackSpace,
-		gdk.KEY_Delete,
-		gdk.KEY_Insert,
-		gdk.KEY_Home,
-		gdk.KEY_End,
-		gdk.KEY_Page_Up,
-		gdk.KEY_Page_Down,
-		gdk.KEY_Left,
-		gdk.KEY_Right,
-		gdk.KEY_KP_Left,
-		gdk.KEY_KP_Right,
-		gdk.KEY_Menu,
-		gdk.KEY_Print,
-		gdk.KEY_Pause,
-		gdk.KEY_Scroll_Lock,
-		gdk.KEY_Caps_Lock,
-		gdk.KEY_Num_Lock,
-	}
-
-	for _, key := range specialKeys {
-		if keyval == key {
-			return true
-		}
-	}
-
-	return false
-}
-*/
-
 func (app *Application) setupEvents() {
 	app.setupClipBoardListEvents()
+	app.setupWindowEvents()
+	app.setupSearchBarEvents()
 }
 
 func (app *Application) setupClipBoardListEvents() {
@@ -349,6 +254,59 @@ func (app *Application) setupClipBoardListEvents() {
 	})
 
 	app.clipboardItemsList.AddController(clipboardListkeyController)
+}
+
+func (app *Application) setupWindowEvents() {
+	windowKeyController := gtk.NewEventControllerKey()
+
+	windowKeyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
+		if state&gdk.ControlMask != 0 && keyval == gdk.KEY_f {
+			app.toggleSearchBar()
+		}
+		return false
+	})
+
+	app.window.AddController(windowKeyController)
+}
+
+func (app *Application) toggleSearchBar() {
+	currentState := app.searchBar.ObjectProperty("search-mode-enabled").(bool)
+	app.searchToggleButton.SetActive(!currentState)
+	app.searchBar.SetObjectProperty("search-mode-enabled", !currentState)
+}
+
+func (app *Application) setupSearchBarEvents() {
+	app.searchEntry.ConnectSearchChanged(func() {
+		if app.searchEntry.Text() == "" {
+			database.searchFilter = ""
+			app.updateClipboardRows(false)
+			app.toggleSearchBar()
+			return
+		}
+		database.searchFilter = app.searchEntry.Text()
+		app.updateClipboardRows(false)
+	})
+	app.searchBar.ConnectEntry(app.searchEntry)
+	app.searchToggleButton.ConnectToggled(func() {
+		app.searchBar.SetObjectProperty("search-mode-enabled", app.searchToggleButton.Active())
+	})
+	app.searchEntry.ConnectActivate(func() {
+		if app.clipboardItemsList.RowAtIndex(0) == nil {
+			return
+		}
+		app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
+	})
+	searchEntryKeyController := gtk.NewEventControllerKey()
+	searchEntryKeyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
+		if keyval == gdk.KEY_Escape {
+			app.searchEntry.SetText("")
+			app.toggleSearchBar()
+			return true
+		}
+		return false
+	})
+
+	app.searchEntry.AddController(searchEntryKeyController)
 }
 
 func (app *Application) setupStyleSupport() {
