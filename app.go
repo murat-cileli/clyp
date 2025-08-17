@@ -131,7 +131,7 @@ func (app *Application) addTextRow(item ClipboardItem) {
 	}
 	contentLabel := gtk.NewLabel(item.content)
 	contentLabel.SetWrap(true)
-	contentLabel.SetWrapMode(pango.WrapWord)
+	contentLabel.SetWrapMode(pango.WrapWordChar)
 	contentLabel.SetXAlign(0)
 	contentLabel.AddCSSClass("title")
 
@@ -151,8 +151,8 @@ func (app *Application) addTextRow(item ClipboardItem) {
 
 func (app *Application) addImageRow(item ClipboardItem) {
 	box := gtk.NewBox(gtk.OrientationVertical, 0)
-	box.SetMarginTop(0)
-	box.SetMarginBottom(0)
+	box.SetMarginTop(12)
+	box.SetMarginBottom(12)
 	box.SetMarginStart(12)
 	box.SetMarginEnd(12)
 
@@ -171,10 +171,6 @@ func (app *Application) addImageRow(item ClipboardItem) {
 		} else {
 			paintable := gdk.Paintabler(texture)
 			image := gtk.NewImageFromPaintable(paintable)
-			image.SetHAlign(gtk.AlignCenter)
-			image.SetVAlign(gtk.AlignCenter)
-			image.SetHExpand(false)
-			image.SetVExpand(false)
 			app.scaleImageToFit(image, texture, 300)
 			box.Append(image)
 		}
@@ -210,19 +206,19 @@ func (app *Application) loadImageFromBase64(base64Data string) *gdk.Texture {
 func (app *Application) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, maxSize int) {
 	width := texture.Width()
 	height := texture.Height()
+	newWidth := width
+	newHeight := height
 
-	if height > maxSize {
-		ratio := float64(maxSize) / float64(height)
-		newWidth := int(float64(width) * ratio)
-		newHeight := maxSize
+	if width > maxSize || height > maxSize {
+		var ratio float64
+		if width > height {
+			ratio = float64(maxSize) / float64(width)
+		} else {
+			ratio = float64(maxSize) / float64(height)
+		}
+		newWidth = int(float64(width) * ratio)
+		newHeight = int(float64(height) * ratio)
 		image.SetSizeRequest(newWidth, newHeight)
-	} else if width > maxSize {
-		ratio := float64(maxSize) / float64(width)
-		newWidth := maxSize
-		newHeight := int(float64(height) * ratio)
-		image.SetSizeRequest(newWidth, newHeight)
-	} else {
-		image.SetSizeRequest(width, height)
 	}
 }
 
