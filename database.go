@@ -53,3 +53,7 @@ CREATE INDEX clipboard_type_IDX ON clipboard ("type",content);
 CREATE UNIQUE INDEX clipboard_content_IDX ON clipboard (content,date_time);
 `)
 }
+
+func (database *Database) vacuum() {
+	database.db.Exec(`VACUUM;`)
+}

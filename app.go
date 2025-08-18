@@ -63,17 +63,14 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
 	app.setupCSS()
 	app.updateClipboardRows(true)
-	app.setupEvents()
+	database.vacuum()
+	app.setupEvents(gtkApp)
 	app.setupShortcutsAction(gtkApp)
 	app.setupAboutAction(gtkApp)
 	app.setupStyleSupport()
 	app.window.SetApplication(gtkApp)
 	app.window.SetVisible(true)
 	app.window.SetIconName("bio.murat.clyp")
-	app.window.ConnectCloseRequest(func() bool {
-		app.shutdown(gtkApp)
-		return true
-	})
 	clipboard.updateRecentContentFromDatabase()
 	clipboard.watch()
 }
@@ -99,6 +96,7 @@ func (app *Application) shutdown(gtkApp *gtk.Application) {
 		switch response {
 		case int(gtk.ResponseYes):
 			if database.db != nil {
+				database.vacuum()
 				database.db.Close()
 			}
 			gtkApp.Quit()
@@ -278,10 +276,18 @@ func (app *Application) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, 
 	}
 }
 
-func (app *Application) setupEvents() {
+func (app *Application) setupEvents(gtkApp *gtk.Application) {
+	app.setupAppEvents(gtkApp)
 	app.setupClipBoardListEvents()
 	app.setupWindowEvents()
 	app.setupSearchBarEvents()
+}
+
+func (app *Application) setupAppEvents(gtkApp *gtk.Application) {
+	app.window.ConnectCloseRequest(func() bool {
+		app.shutdown(gtkApp)
+		return true
+	})
 }
 
 func (app *Application) setupClipBoardListEvents() {
