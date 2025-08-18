@@ -8,9 +8,6 @@
     <property name="icon-name">bio.murat.clyp</property>
     <property name="titlebar">
       <object class="GtkHeaderBar" id="gtk_header_bar">
-        <style>
-          <class name="flat"/>
-        </style>
         <child type="start">
           <object class="GtkMenuButton">
             <property name="can-focus">false</property>
@@ -42,6 +39,9 @@
         <property name="spacing">0</property>
         <child>
           <object class="GtkSearchBar" id="search_bar">
+            <style>
+              <class name="search-bar"/>
+            </style>
             <child>
               <object class="GtkSearchEntry" id="search_entry">
                 <property name="can-focus">true</property>

@@ -178,6 +178,7 @@ func (app *Application) addTextRow(item ClipboardItem) {
 	box.SetMarginBottom(12)
 	box.SetMarginStart(12)
 	box.SetMarginEnd(12)
+	box.AddCSSClass("item-box")
 
 	if len(item.content) > 100 {
 		item.content = item.content[:100] + "\n..."
@@ -197,6 +198,7 @@ func (app *Application) addTextRow(item ClipboardItem) {
 
 	row := gtk.NewListBoxRow()
 	row.SetName(strconv.Itoa(item.id))
+	row.AddCSSClass("item-row")
 	row.SetChild(box)
 
 	app.clipboardItemsList.Append(row)

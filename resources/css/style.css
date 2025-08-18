@@ -1,3 +1,17 @@
+.titlebar {
+    background: var(--theme_bg_color);
+    border-bottom: none;
+    box-shadow: none;
+}
+
+.toggle {
+    border: none;
+}
+
+.clipboard-list {
+    background: var(--theme_bg_color);
+}
+
 .clipboard-list, .clipboard-list * {
     border-radius: 0;
     border-top: none;
