@@ -1,4 +1,6 @@
 clyp
 dist/
 builddir/
+build-dir/
+vendor/
 .flatpak-builder/

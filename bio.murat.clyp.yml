@@ -15,32 +15,28 @@ finish-args:
   - --device=dri
   # Home directory access for storing clipboard data
   - --filesystem=xdg-data
-  # Network access (if needed for future features)
-  - --share=network
   # Access to system clipboard
   - --talk-name=org.freedesktop.portal.Desktop
   - --talk-name=org.gtk.vfs.*
-
 build-options:
   append-path: /usr/lib/sdk/golang/bin
   env:
     GOBIN: /app/bin
     GOCACHE: /run/build/clyp/go-build-cache
     GOMODCACHE: /run/build/clyp/go-mod-cache
-
+    GOMAXPROCS: 16
 modules:
   - name: clyp
     buildsystem: simple
     build-options:
       env:
-        CGO_ENABLED: '1'
+        CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
+        GOMAXPROCS: 16
     build-commands:
-      # Download dependencies
-      - go mod download
-      # Build the application
-      - go build -v -o clyp .
+      # Build the application using vendor directory
+      - go build -mod=vendor -v -o clyp .
       # Install binary
       - install -Dm755 clyp /app/bin/clyp
       # Install desktop file
