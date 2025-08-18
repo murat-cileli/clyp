@@ -16,8 +16,10 @@ import (
 )
 
 var (
-	//go:embed main.ui
-	uiXML     string
+	//go:embed resources/ui/main.ui
+	uiXML string
+	//go:embed resources/css/style.css
+	cssData   string
 	database  Database
 	clipboard Clipboard
 )
@@ -59,11 +61,12 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.searchEntry = builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
 	app.searchBar = builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
 	app.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
+	app.setupCSS()
 	app.updateClipboardRows(true)
 	app.setupEvents()
-	app.setupStyleSupport()
 	app.setupShortcutsAction(gtkApp)
 	app.setupAboutAction(gtkApp)
+	app.setupStyleSupport()
 	app.window.SetApplication(gtkApp)
 	app.window.SetVisible(true)
 	app.window.SetIconName("bio.murat.clyp")
@@ -104,6 +107,24 @@ func (app *Application) shutdown(gtkApp *gtk.Application) {
 			return
 		}
 	})
+}
+
+func (app *Application) setupCSS() {
+	if len(cssData) == 0 {
+		return
+	}
+
+	app.clipboardItemsList.AddCSSClass("clipboard-list")
+
+	cssProvider := gtk.NewCSSProvider()
+	cssProvider.LoadFromString(cssData)
+
+	display := gdk.DisplayGetDefault()
+	gtk.StyleContextAddProviderForDisplay(
+		display,
+		cssProvider,
+		gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+	)
 }
 
 func (app *Application) setupDataDir() {
@@ -205,6 +226,7 @@ func (app *Application) addImageRow(item ClipboardItem) {
 		} else {
 			paintable := gdk.Paintabler(texture)
 			image := gtk.NewImageFromPaintable(paintable)
+			image.AddCSSClass("item-image")
 			app.scaleImageToFit(image, texture, 300)
 			box.Append(image)
 		}

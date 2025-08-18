@@ -36,9 +36,9 @@
         <property name="vexpand">true</property>
         <property name="hexpand">true</property>
         <property name="margin-top">0</property>
-        <property name="margin-bottom">12</property>
-        <property name="margin-start">12</property>
-        <property name="margin-end">12</property>
+        <property name="margin-bottom">0</property>
+        <property name="margin-start">0</property>
+        <property name="margin-end">0</property>
         <property name="spacing">0</property>
         <child>
           <object class="GtkSearchBar" id="search_bar">
@@ -64,10 +64,10 @@
             <property name="overlay-scrolling">true</property>
             <child>
               <object class="GtkListBox" id="clipboard_list">
-                <property name="can-focus">true</property>
                 <style>
                   <class name="boxed-list"/>
                 </style>
+                <property name="can-focus">true</property>
                 <property name="selection-mode">1</property>
                 <property name="halign">fill</property>
                 <property name="valign">start</property>
