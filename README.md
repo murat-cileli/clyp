@@ -125,15 +125,3 @@ go build -o clyp .
 ├── data/           # Desktop files and metadata
 └── vendor/         # Vendored dependencies
 ```
-
-## License
-
-GPL-3.0-only
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
-
-## Author
-
-Murat Çileli <murat.cileli@gmail.com>
