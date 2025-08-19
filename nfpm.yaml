@@ -12,7 +12,7 @@ maintainer: "Murat Çileli <murat.cileli@gmail.com>"
 vendor: "Murat Çileli"
 homepage: "https://github.com/murat-cileli/clyp"
 description: "Clipboard manager."
-license: "GPL-3.0-or-later"
+license: "GPL-3.0-only"
 contents:
   - src: ./dist/bio.murat.clyp_linux_amd64_v1/clyp
     dst: /usr/bin/clyp
