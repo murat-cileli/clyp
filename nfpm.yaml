@@ -1,11 +1,3 @@
-# This is an example nfpm configuration file.
-# Make sure to check the documentation at https://nfpm.goreleaser.com
-#
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
 name: "clyp"
 arch: "amd64"
 platform: "linux"
@@ -24,9 +16,9 @@ license: "MIT"
 contents:
   - src: ./dist/bio.murat.clyp_linux_amd64_v1/clyp
     dst: /usr/bin/clyp
-  - src: ./data/usr/share/applications/bio.murat.clyp.desktop
+  - src: ./data/bio.murat.clyp.desktop
     dst: /usr/share/applications/bio.murat.clyp.desktop
-  - src: ./data/usr/share/icons/hicolor
+  - src: ./data/icons/hicolor
     dst: /usr/share/icons/hicolor
     type: tree
     file_info:
