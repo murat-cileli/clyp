@@ -1,7 +1,9 @@
 [Desktop Entry]
-Name=Clyp
-Exec=clyp
+Version=1.0
 Type=Application
-Terminal=false
+Name=Clyp
+Comment=Clipboard manager.
+Categories=Utility;
 Icon=bio.murat.clyp
-Categories=Utilities;
+Exec=clyp
+Terminal=false

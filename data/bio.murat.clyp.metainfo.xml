@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>bio.murat.clyp</id>
+  
+  <name>Clyp</name>
+  <summary>Clipboard manager.</summary>
+  
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  
+  <description>
+    <p>
+      High performance clipboard manager written in Go.
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">bio.murat.clyp.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/screenshot-1.png</image>
+    </screenshot>
+  </screenshots>
+</component>

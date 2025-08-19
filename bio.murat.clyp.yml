@@ -2,7 +2,6 @@ app-id: bio.murat.clyp
 runtime: org.gnome.Platform
 runtime-version: '48'
 sdk: org.gnome.Sdk
-sdk-version: '48'
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.golang
 command: clyp
@@ -41,6 +40,7 @@ modules:
     build-commands:
       - go build -mod=vendor -v -o clyp .
       - install -Dm755 clyp /app/bin/clyp
+      - install -Dm644 data/bio.murat.clyp.metainfo.xml /app/share/metainfo/bio.murat.clyp.metainfo.xml
       - install -Dm644 data/usr/share/applications/bio.murat.clyp.desktop /app/share/applications/bio.murat.clyp.desktop
       - install -Dm644 data/usr/share/icons/hicolor/16x16/apps/bio.murat.clyp.png /app/share/icons/hicolor/16x16/apps/bio.murat.clyp.png
       - install -Dm644 data/usr/share/icons/hicolor/32x32/apps/bio.murat.clyp.png /app/share/icons/hicolor/32x32/apps/bio.murat.clyp.png
