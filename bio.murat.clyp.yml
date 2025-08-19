@@ -2,50 +2,46 @@ app-id: bio.murat.clyp
 runtime: org.gnome.Platform
 runtime-version: '48'
 sdk: org.gnome.Sdk
+sdk-version: '48'
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.golang
 command: clyp
 finish-args:
-  # X11 + XShm access
   - --share=ipc
   - --socket=x11
-  # Wayland access
   - --socket=wayland
-  # Access to clipboard
   - --device=dri
-  # Home directory access for storing clipboard data
   - --filesystem=xdg-data
-  # Access to system clipboard
   - --talk-name=org.freedesktop.portal.Desktop
   - --talk-name=org.gtk.vfs.*
 build-options:
-  build-args:
-    - --share=network
   append-path: /usr/lib/sdk/golang/bin
   env:
     GOBIN: /app/bin
     GOCACHE: /run/build/clyp/go-build-cache
     GOMODCACHE: /run/build/clyp/go-mod-cache
-    GOMAXPROCS: 16
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /man
+  - /share/doc
+  - /share/gtk-doc
+  - /share/man
+  - /share/pkgconfig
+  - "*.la"
+  - "*.a"
 modules:
   - name: clyp
     buildsystem: simple
     build-options:
-      build-args:
-        - --share=network
       env:
         CGO_ENABLED: 1
         GOOS: linux
         GOARCH: amd64
-        GOMAXPROCS: 16
     build-commands:
-      # Build the application using vendor directory
       - go build -mod=vendor -v -o clyp .
-      # Install binary
       - install -Dm755 clyp /app/bin/clyp
-      # Install desktop file
       - install -Dm644 data/usr/share/applications/bio.murat.clyp.desktop /app/share/applications/bio.murat.clyp.desktop
-      # Install icons
       - install -Dm644 data/usr/share/icons/hicolor/16x16/apps/bio.murat.clyp.png /app/share/icons/hicolor/16x16/apps/bio.murat.clyp.png
       - install -Dm644 data/usr/share/icons/hicolor/32x32/apps/bio.murat.clyp.png /app/share/icons/hicolor/32x32/apps/bio.murat.clyp.png
       - install -Dm644 data/usr/share/icons/hicolor/48x48/apps/bio.murat.clyp.png /app/share/icons/hicolor/48x48/apps/bio.murat.clyp.png
