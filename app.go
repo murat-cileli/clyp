@@ -112,8 +112,6 @@ func (app *Application) setupCSS() {
 		return
 	}
 
-	app.clipboardItemsList.AddCSSClass("clipboard-list")
-
 	cssProvider := gtk.NewCSSProvider()
 	cssProvider.LoadFromString(cssData)
 
@@ -300,6 +298,7 @@ func (app *Application) setupClipBoardListEvents() {
 			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
 				clipboard.copy(selectedRow.Name())
+				app.clipboardItemsList.GrabFocus()
 				return true
 			}
 		}
@@ -308,7 +307,14 @@ func (app *Application) setupClipBoardListEvents() {
 			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
 				clipboard.removeFromDatabase(selectedRow.Name())
+				app.clipboardItemsList.GrabFocus()
+				return true
 			}
+		}
+
+		if keyval == gdk.KEY_Escape {
+			app.closeSearchBar()
+			return true
 		}
 
 		return false
@@ -323,8 +329,9 @@ func (app *Application) setupWindowEvents() {
 	windowKeyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if state&gdk.ControlMask != 0 && keyval == gdk.KEY_f {
 			app.toggleSearchBar()
+			return true
 		}
-		return false
+		return true
 	})
 
 	app.window.AddController(windowKeyController)
@@ -336,12 +343,22 @@ func (app *Application) toggleSearchBar() {
 	app.searchBar.SetObjectProperty("search-mode-enabled", !currentState)
 }
 
+func (app *Application) closeSearchBar() {
+	if app.searchBar.ObjectProperty("search-mode-enabled").(bool) {
+		app.searchToggleButton.SetActive(false)
+		app.searchBar.SetObjectProperty("search-mode-enabled", false)
+		if app.clipboardItemsList.RowAtIndex(0) != nil {
+			app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
+		}
+	}
+}
+
 func (app *Application) setupSearchBarEvents() {
 	app.searchEntry.ConnectSearchChanged(func() {
 		if app.searchEntry.Text() == "" {
 			database.searchFilter = ""
 			app.updateClipboardRows(false)
-			app.toggleSearchBar()
+			app.closeSearchBar()
 			return
 		}
 		database.searchFilter = app.searchEntry.Text()
@@ -349,19 +366,25 @@ func (app *Application) setupSearchBarEvents() {
 	})
 	app.searchBar.ConnectEntry(app.searchEntry)
 	app.searchToggleButton.ConnectToggled(func() {
-		app.searchBar.SetObjectProperty("search-mode-enabled", app.searchToggleButton.Active())
+		app.toggleSearchBar()
 	})
 	app.searchEntry.ConnectActivate(func() {
-		if app.clipboardItemsList.RowAtIndex(0) == nil {
-			return
+		if app.clipboardItemsList.RowAtIndex(0) != nil {
+			app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
+			app.clipboardItemsList.GrabFocus()
 		}
-		app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
 	})
 	searchEntryKeyController := gtk.NewEventControllerKey()
 	searchEntryKeyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
 		if keyval == gdk.KEY_Escape {
-			app.searchEntry.SetText("")
-			app.toggleSearchBar()
+			app.closeSearchBar()
+			return true
+		}
+		if keyval == gdk.KEY_Down || keyval == gdk.KEY_KP_Down || keyval == gdk.KEY_Tab || keyval == gdk.KEY_KP_Tab {
+			if app.clipboardItemsList.RowAtIndex(0) != nil {
+				app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
+				app.clipboardItemsList.GrabFocus()
+			}
 			return true
 		}
 		return false

@@ -65,7 +65,7 @@
             <child>
               <object class="GtkListBox" id="clipboard_list">
                 <style>
-                  <class name="boxed-list"/>
+                  <class name="clipboard-list"/>
                 </style>
                 <property name="can-focus">true</property>
                 <property name="selection-mode">1</property>
