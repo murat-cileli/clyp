@@ -2,7 +2,7 @@
 
 Clipboard manager for Linux.
 
-![Clyp](https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/screenshot-1.png)
+<img src="https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/screenshot-1.png" width="400">
 
 ## Key Features
 
