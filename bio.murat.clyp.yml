@@ -51,4 +51,4 @@ modules:
     sources:
       - type: git
         url: https://github.com/murat-cileli/clyp.git
-        commit: 269efb417855133909ecea5946b3a95b482981a8
+        commit: a1f38b9d76020904b408c95807a94e137971435d
