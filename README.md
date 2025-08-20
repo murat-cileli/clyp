@@ -92,3 +92,12 @@ go build .
 ├── data/           # Desktop files and metadata
 └── vendor/         # Vendored dependencies
 ```
+
+### TODO
+- Add support for running in the background.
+- Add database encryption.
+
+### CREDITS
+- [gotk4](https://github.com/diamondburned/gotk4)
+- [go-sqlite3](https://github.com/mattn/go-sqlite3)
+- [Icon by Designspace Team - Flaticon](https://www.flaticon.com/free-icons/clipboard)
