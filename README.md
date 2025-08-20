@@ -1,6 +1,6 @@
 # Clyp
 
-Clipboard manager for Linux.
+Modern, fast, simple clipboard manager for Linux.
 
 <img src="https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/screenshot-1.png" style="max-width:820px;">
 
