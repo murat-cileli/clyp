@@ -50,8 +50,7 @@ func (app *Application) activate(gtkApp *gtk.Application) {
 	app.setupDataDir()
 
 	if err := database.init(); err != nil {
-		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
+		panic(err.Error())
 	}
 
 	app.name = "Clyp"
@@ -124,18 +123,11 @@ func (app *Application) setupCSS() {
 }
 
 func (app *Application) setupDataDir() {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Printf("Failed to get user home dir: %v", err)
-		os.Exit(1)
-	}
-
-	app.dataDir = homeDir + "/.local/share/" + app.id
+	app.dataDir = glib.GetUserDataDir() + "/" + app.id
 
 	if _, err := os.Stat(app.dataDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(app.dataDir, 0755); err != nil {
-			log.Printf("Failed to create data dir: %v", err)
-			os.Exit(1)
+			panic(err.Error())
 		}
 	}
 }

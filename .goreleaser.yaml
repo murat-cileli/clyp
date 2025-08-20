@@ -18,15 +18,3 @@ archives:
       {{- title .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
       {{- else }}{{ .Arch }}{{ end }}
-nfpms:
-  - id: clyp
-    section: utils
-    priority: optional
-    maintainer: Murat Çileli <murat.cileli@gmail.com>
-    homepage: https://github.com/murat-cileli/clyp
-    vendor: Murat Çileli
-    license: GPL-3.0-only
-    description: Clipboard manager.
-    formats:
-      - deb
-      - archlinux

@@ -1,3 +1,4 @@
+
 name: "clyp"
 arch: "amd64"
 platform: "linux"
@@ -14,13 +15,13 @@ homepage: "https://github.com/murat-cileli/clyp"
 description: "Clipboard manager."
 license: "GPL-3.0-only"
 contents:
-  - src: ./dist/clyp_linux_amd64/clyp
+  - src: dist/clyp_linux_amd64_v1/clyp
     dst: /usr/bin/clyp
-  - src: ./data/bio.murat.clyp.metainfo.xml
+  - src: data/bio.murat.clyp.metainfo.xml
     dst: /usr/share/metainfo/bio.murat.clyp.metainfo.xml
-  - src: ./data/bio.murat.clyp.desktop
+  - src: data/bio.murat.clyp.desktop
     dst: /usr/share/applications/bio.murat.clyp.desktop
-  - src: ./data/icons/hicolor
+  - src: data/icons/hicolor
     dst: /usr/share/icons/hicolor
     type: tree
     file_info:
