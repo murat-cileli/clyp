@@ -15,34 +15,10 @@ Clipboard manager for Linux.
 
 ## Installation
 
-See Releases section.
-
-### Building From Source
-
-#### Prerequisites
-- Go 1.25.0 or later
-- GTK4 development libraries
-- SQLite3 development libraries
-
-#### Ubuntu/Debian
-```bash
-sudo apt install golang-go libgtk-4-dev libsqlite3-dev
-```
-
-#### Arch Linux
-```bash
-sudo pacman -S go gtk4 sqlite
-```
-
-#### Build and Install
-```bash
-git clone https://github.com/murat-cileli/clyp.git
-cd clyp
-go build -o clyp .
-sudo cp clyp /usr/local/bin/
-sudo cp data/bio.murat.clyp.desktop /usr/share/applications/
-sudo cp -r data/icons/hicolor /usr/share/icons/
-```
+Go to [latest release](https://github.com/murat-cileli/clyp/releases/latest) and download
+- **.deb** for **Ubuntu**
+- **pkg.tar.zst** for **Arch Linux**
+- or **tar.gz** for binary.
 
 ## Usage
 
@@ -99,7 +75,7 @@ Clyp follows XDG Base Directory specifications:
 git clone https://github.com/murat-cileli/clyp.git
 cd clyp
 go mod download
-go build -o clyp .
+go build .
 ```
 
 ### Dependencies
@@ -116,3 +92,12 @@ go build -o clyp .
 ├── data/           # Desktop files and metadata
 └── vendor/         # Vendored dependencies
 ```
+
+### TODO
+- Add support for running in the background.
+- Add database encryption.
+
+### CREDITS
+- [gotk4](https://github.com/diamondburned/gotk4)
+- [go-sqlite3](https://github.com/mattn/go-sqlite3)
+- [Icon by Freepik - Flaticon](https://www.flaticon.com/free-icons/clipboard)
