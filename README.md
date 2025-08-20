@@ -21,7 +21,7 @@ See Releases section.
 ### Building From Source
 
 #### Prerequisites
-- Go 1.24.6 or later
+- Go 1.25.0 or later
 - GTK4 development libraries
 - SQLite3 development libraries
 
@@ -75,16 +75,10 @@ Or launch from your application menu.
 ## Technical Details
 
 ### Architecture
-- **Language**: Go 1.24.6
+- **Language**: Go 1.25.0
 - **GUI Framework**: GTK4 via gotk4 bindings
 - **Database**: SQLite3 for persistent storage
-- **Platform**: Linux (X11/Wayland)
-
-### Performance
-- Optimized for handling large clipboard histories (10,000+ items tested)
-- Efficient SQLite database with proper indexing
-- Minimal memory footprint
-- Fast search with LIKE queries and proper indexing
+- **Platform**: Linux (Wayland/X11)
 
 ### Data Storage
 Clipboard data is stored in `~/.local/share/bio.murat.clyp/clyp.db` using SQLite3. The database includes:
@@ -98,8 +92,6 @@ Clipboard data is stored in `~/.local/share/bio.murat.clyp/clyp.db` using SQLite
 Clyp follows XDG Base Directory specifications:
 - **Data Directory**: `~/.local/share/bio.murat.clyp/`
 - **Database File**: `~/.local/share/bio.murat.clyp/clyp.db`
-
-The application automatically adapts to your system's color scheme (light/dark mode).
 
 ## Development
 

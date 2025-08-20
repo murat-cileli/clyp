@@ -298,7 +298,6 @@ func (app *Application) setupClipBoardListEvents() {
 			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
 				clipboard.copy(selectedRow.Name())
-				app.clipboardItemsList.GrabFocus()
 				return true
 			}
 		}
@@ -307,7 +306,6 @@ func (app *Application) setupClipBoardListEvents() {
 			selectedRow := app.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
 				clipboard.removeFromDatabase(selectedRow.Name())
-				app.clipboardItemsList.GrabFocus()
 				return true
 			}
 		}
@@ -371,7 +369,6 @@ func (app *Application) setupSearchBarEvents() {
 	app.searchEntry.ConnectActivate(func() {
 		if app.clipboardItemsList.RowAtIndex(0) != nil {
 			app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
-			app.clipboardItemsList.GrabFocus()
 		}
 	})
 	searchEntryKeyController := gtk.NewEventControllerKey()

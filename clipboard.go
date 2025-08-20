@@ -67,13 +67,12 @@ func (clipboard *Clipboard) watch() {
 	clipboard.clipboard = gdk.DisplayGetDefault().Clipboard()
 	clipboard.clipboard.ConnectChanged(func() {
 		formats := clipboard.clipboard.Formats().String()
-		if formats == "" {
-			return
-		}
 		if strings.Contains(formats, "text/") {
 			clipboard.readTextContent()
 		} else if strings.Contains(formats, "image/") {
 			clipboard.readImageContent()
+		} else {
+			log.Printf("Unsupported clipboard format: %s", formats)
 		}
 	})
 }

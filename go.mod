@@ -1,6 +1,6 @@
 module github.com/murat-cileli/clyp
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/diamondburned/gotk4/pkg v0.3.1
