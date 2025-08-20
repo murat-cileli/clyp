@@ -100,4 +100,6 @@ go build .
 ### CREDITS
 - [gotk4](https://github.com/diamondburned/gotk4)
 - [go-sqlite3](https://github.com/mattn/go-sqlite3)
+- [GoReleaser](https://goreleaser.com/)
+- [nFPM](https://nfpm.goreleaser.com/)
 - [Icon by Freepik - Flaticon](https://www.flaticon.com/free-icons/clipboard)
