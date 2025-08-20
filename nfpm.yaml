@@ -14,7 +14,7 @@ homepage: "https://github.com/murat-cileli/clyp"
 description: "Clipboard manager."
 license: "GPL-3.0-only"
 contents:
-  - src: ./dist/bio.murat.clyp_linux_amd64_v1/clyp
+  - src: ./dist/clyp_linux_amd64/clyp
     dst: /usr/bin/clyp
   - src: ./data/bio.murat.clyp.metainfo.xml
     dst: /usr/share/metainfo/bio.murat.clyp.metainfo.xml

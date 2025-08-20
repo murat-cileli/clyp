@@ -3,7 +3,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - id: bio.murat.clyp
+  - id: clyp
     env:
       - CGO_ENABLED=1
     goos:
@@ -13,14 +13,13 @@ builds:
 archives:
   - formats: [tar.gz]
     name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
+      {{ .ProjectName }}-
+      {{- .Version }}-
+      {{- title .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
 nfpms:
-  - id: bio.murat.clyp
+  - id: clyp
     section: utils
     priority: optional
     maintainer: Murat Çileli <murat.cileli@gmail.com>

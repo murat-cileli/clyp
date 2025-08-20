@@ -7,12 +7,9 @@ sdk-extensions:
 command: clyp
 finish-args:
   - --share=ipc
-  - --socket=x11
   - --socket=wayland
-  - --device=dri
-  - --filesystem=xdg-data
-  - --talk-name=org.freedesktop.portal.Desktop
-  - --talk-name=org.gtk.vfs.*
+  - --socket=fallback-x11
+  - --filesystem=xdg-data/bio.murat.clyp/clyp.db:rw,create
 build-options:
   append-path: /usr/lib/sdk/golang/bin
   env:
@@ -41,7 +38,8 @@ modules:
       - go build -mod=vendor -v -o clyp .
       - install -Dm755 clyp /app/bin/clyp
       - install -Dm644 data/bio.murat.clyp.metainfo.xml /app/share/metainfo/bio.murat.clyp.metainfo.xml
-      - install -Dm644 data/usr/share/applications/bio.murat.clyp.desktop /app/share/applications/bio.murat.clyp.desktop
+      - install -Dm644 data/bio.murat.clyp.desktop /app/share/applications/bio.murat.clyp.desktop
+      - install -Dm655 data/clyp.db /app/share/data/bio.murat.clyp/clyp.db
       - install -Dm644 data/usr/share/icons/hicolor/16x16/apps/bio.murat.clyp.png /app/share/icons/hicolor/16x16/apps/bio.murat.clyp.png
       - install -Dm644 data/usr/share/icons/hicolor/32x32/apps/bio.murat.clyp.png /app/share/icons/hicolor/32x32/apps/bio.murat.clyp.png
       - install -Dm644 data/usr/share/icons/hicolor/48x48/apps/bio.murat.clyp.png /app/share/icons/hicolor/48x48/apps/bio.murat.clyp.png
