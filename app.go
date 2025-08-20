@@ -310,7 +310,20 @@ func (app *Application) setupClipBoardListEvents() {
 		return false
 	})
 
+	gestureClick := gtk.NewGestureClick()
+
+	gestureClick.ConnectPressed(func(nPress int, x, y float64) {
+		if nPress == 2 {
+			selectedRow := app.clipboardItemsList.SelectedRow()
+			if selectedRow != nil {
+				clipboard.copy(selectedRow.Name())
+			}
+		}
+	})
+
 	app.clipboardItemsList.AddController(clipboardListkeyController)
+	app.clipboardItemsList.AddController(gestureClick)
+
 }
 
 func (app *Application) setupWindowEvents() {
@@ -337,9 +350,7 @@ func (app *Application) closeSearchBar() {
 	if app.searchBar.ObjectProperty("search-mode-enabled").(bool) {
 		app.searchToggleButton.SetActive(false)
 		app.searchBar.SetObjectProperty("search-mode-enabled", false)
-		if app.clipboardItemsList.RowAtIndex(0) != nil {
-			app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
-		}
+		app.focusFirstClipboardListItem()
 	}
 }
 
@@ -359,9 +370,7 @@ func (app *Application) setupSearchBarEvents() {
 		app.toggleSearchBar()
 	})
 	app.searchEntry.ConnectActivate(func() {
-		if app.clipboardItemsList.RowAtIndex(0) != nil {
-			app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
-		}
+		app.focusFirstClipboardListItem()
 	})
 	searchEntryKeyController := gtk.NewEventControllerKey()
 	searchEntryKeyController.ConnectKeyPressed(func(keyval, keycode uint, state gdk.ModifierType) bool {
@@ -370,16 +379,23 @@ func (app *Application) setupSearchBarEvents() {
 			return true
 		}
 		if keyval == gdk.KEY_Down || keyval == gdk.KEY_KP_Down || keyval == gdk.KEY_Tab || keyval == gdk.KEY_KP_Tab {
-			if app.clipboardItemsList.RowAtIndex(0) != nil {
-				app.clipboardItemsList.SelectRow(app.clipboardItemsList.RowAtIndex(0))
-				app.clipboardItemsList.GrabFocus()
-			}
+			app.focusFirstClipboardListItem()
 			return true
 		}
 		return false
 	})
 
 	app.searchEntry.AddController(searchEntryKeyController)
+}
+
+func (app *Application) focusFirstClipboardListItem() {
+	if app.clipboardItemsList.RowAtIndex(0) == nil {
+		return
+	}
+	firstItem := app.clipboardItemsList.RowAtIndex(0)
+	app.clipboardItemsList.SelectRow(firstItem)
+	gtk.ListBoxRow(*firstItem).Cast().(*gtk.ListBoxRow).GrabFocus()
+
 }
 
 func (app *Application) setupStyleSupport() {

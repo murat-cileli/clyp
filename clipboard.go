@@ -183,7 +183,6 @@ func (clipboard *Clipboard) copy(id string) {
 	}
 
 	app.closeSearchBar()
-	app.clipboardItemsList.GrabFocus()
 }
 
 func (clipboard *Clipboard) updateItemDateTime(id string) {
