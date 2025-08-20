@@ -17,7 +17,6 @@ Clipboard manager for Linux.
 
 See Releases section.
 
-
 ### Building From Source
 
 #### Prerequisites
