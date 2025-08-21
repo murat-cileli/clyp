@@ -148,7 +148,7 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 
 	_, err := database.db.Exec("INSERT INTO clipboard (content, type) VALUES (?, ?)", content, itemType)
 	if err == nil {
-		app.updateClipboardRows(true)
+		//app.updateClipboardRows(true)
 		clipboard.recentContent = content
 	}
 }
@@ -181,8 +181,6 @@ func (clipboard *Clipboard) copy(id string) {
 		clipboard.clipboard.SetTexture(texture)
 		clipboard.updateItemDateTime(id)
 	}
-
-	app.closeSearchBar()
 }
 
 func (clipboard *Clipboard) updateItemDateTime(id string) {
@@ -196,15 +194,12 @@ func (clipboard *Clipboard) updateItemDateTime(id string) {
 		return
 	}
 
-	app.updateClipboardRows(true)
+	//app.updateClipboardRows(true)
 }
 
 func (clipboard *Clipboard) removeFromDatabase(id string) {
 	if id == "" {
 		return
 	}
-	_, err := database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
-	if err == nil {
-		app.updateClipboardRows(true)
-	}
+	database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
 }
