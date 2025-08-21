@@ -11,7 +11,6 @@ import (
 
 var (
 	clipboard Clipboard
-	dBus      IPC
 )
 
 type Service struct{}
@@ -32,6 +31,5 @@ func (service *Service) activate(gtkServiceApp *gtk.Application) {
 	database.vacuum()
 	clipboard.updateRecentContentFromDatabase()
 	clipboard.watch()
-	dBus.init()
 	gtkServiceApp.Hold()
 }
