@@ -94,7 +94,7 @@ go build .
 ```
 
 ### TODO
-- Add support for running in the background.
+- Add support for running in the background. [**WORK IN PROGRESS!**]
 - Add database encryption.
 
 ### CREDITS
