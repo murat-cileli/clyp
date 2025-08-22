@@ -37,16 +37,14 @@ func (gui *GUI) init() {
 	gtkApp.ConnectShutdown(func() { gui.shutdown(gtkApp) })
 	gtkApp.ConnectAfter("activate", func() {
 		go ipc.listen()
-		go func() {
-			cmd := "clyp"
-			var watcher exec.Cmd
-			if os.Getenv("RUN_ENV") == "dev" {
-				watcher = *exec.Command("./"+cmd, "watch")
-			}
-			if err := watcher.Run(); err != nil {
-				log.Println(err.Error())
-			}
-		}()
+		cmd := "clyp"
+		var watcher *exec.Cmd
+		if os.Getenv("RUN_ENV") == "dev" {
+			watcher = exec.Command("./"+cmd, "watch")
+		}
+		if err := watcher.Start(); err != nil {
+			log.Println(err.Error())
+		}
 	})
 
 	if code := gtkApp.Run(os.Args); code > 0 {

@@ -150,7 +150,7 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 	}
 
 	if itemType == 2 {
-		database.db.Exec("DELETE FROM clipboard WHERE type=2")
+		database.db.Exec("DELETE FROM clipboard WHERE TYPE = 2 AND id NOT IN (SELECT id FROM clipboard WHERE TYPE = 2 ORDER BY date_time DESC LIMIT 2)")
 	}
 
 	_, err := database.db.Exec("INSERT INTO clipboard (content, type) VALUES (?, ?)", content, itemType)
