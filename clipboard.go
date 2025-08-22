@@ -13,7 +13,7 @@ import (
 )
 
 type Clipboard struct {
-	clipboard     *gdk.Clipboard
+	clipboard     gdk.Clipboard
 	itemCount     int
 	recentContent string
 }
@@ -31,7 +31,7 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 	var err error
 
 	if database.searchFilter != "" {
-		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 50`
+		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 30`
 		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%")
 	} else {
 		database.query = database.queryBase
@@ -64,9 +64,12 @@ func (clipboard *Clipboard) count() {
 }
 
 func (clipboard *Clipboard) watch() {
-	clipboard.clipboard = gdk.DisplayGetDefault().Clipboard()
+	clipboard.clipboard = *gdk.DisplayGetDefault().Clipboard()
 	clipboard.clipboard.ConnectChanged(func() {
 		formats := clipboard.clipboard.Formats().String()
+		if formats == "" {
+			return
+		}
 		if strings.Contains(formats, "text/") {
 			clipboard.readTextContent()
 		} else if strings.Contains(formats, "image/") {
@@ -146,10 +149,14 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 		return
 	}
 
+	if itemType == 2 {
+		database.db.Exec("DELETE FROM clipboard WHERE TYPE = 2 AND id NOT IN (SELECT id FROM clipboard WHERE TYPE = 2 ORDER BY date_time DESC LIMIT 2)")
+	}
+
 	_, err := database.db.Exec("INSERT INTO clipboard (content, type) VALUES (?, ?)", content, itemType)
 	if err == nil {
-		app.updateClipboardRows(true)
 		clipboard.recentContent = content
+		ipc.notify()
 	}
 }
 
@@ -163,9 +170,11 @@ func (clipboard *Clipboard) copy(id string) {
 	row := database.db.QueryRow("SELECT content, type FROM clipboard WHERE id=? LIMIT 1", id)
 	row.Scan(&content, &itemType)
 
+	clipboardInstance := gdk.DisplayGetDefault().Clipboard()
+
 	switch itemType {
 	case 1:
-		clipboard.clipboard.SetText(content)
+		clipboardInstance.SetText(content)
 		clipboard.updateItemDateTime(id)
 	case 2:
 		decoded, err := base64.StdEncoding.DecodeString(content)
@@ -178,11 +187,11 @@ func (clipboard *Clipboard) copy(id string) {
 			log.Printf("Failed to create texture from bytes: %v", err)
 			return
 		}
-		clipboard.clipboard.SetTexture(texture)
+		clipboardInstance.SetTexture(texture)
 		clipboard.updateItemDateTime(id)
 	}
 
-	app.closeSearchBar()
+	clipboardInstance = nil
 }
 
 func (clipboard *Clipboard) updateItemDateTime(id string) {
@@ -195,16 +204,11 @@ func (clipboard *Clipboard) updateItemDateTime(id string) {
 		log.Printf("Failed to update item date time: %v", err)
 		return
 	}
-
-	app.updateClipboardRows(true)
 }
 
 func (clipboard *Clipboard) removeFromDatabase(id string) {
 	if id == "" {
 		return
 	}
-	_, err := database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
-	if err == nil {
-		app.updateClipboardRows(true)
-	}
+	database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
 }
