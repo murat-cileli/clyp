@@ -72,7 +72,7 @@ func (gui *GUI) activate(gtkApp *gtk.Application) {
 	gui.setupEvents(gtkApp)
 	gui.setupShortcutsAction(gtkApp)
 	gui.setupAboutAction(gtkApp)
-	gui.setupTestCheckAction(gtkApp)
+	gui.setupActionRunOnStartup(gtkApp)
 	gui.setupStyleSupport()
 	gui.window.SetApplication(gtkApp)
 	gui.window.SetVisible(true)
@@ -438,17 +438,26 @@ func (gui *GUI) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog.SetVisible(true)
 }
 
-func (gui *GUI) setupTestCheckAction(gtkApp *gtk.Application) {
-	initialState := glib.NewVariantBoolean(false)
+func (gui *GUI) setupActionRunOnStartup(gtkApp *gtk.Application) {
+	hasStartupEntry := gui.hasStartupEntry()
+	initialState := glib.NewVariantBoolean(hasStartupEntry)
 	actionRunOnStartup := gio.NewSimpleActionStateful("run_on_startup", nil, initialState)
 	actionRunOnStartup.ConnectActivate(func(parameter *glib.Variant) {
 		gui.handleRunOnStartup(actionRunOnStartup)
 	})
 	gtkApp.AddAction(actionRunOnStartup)
+	if !hasStartupEntry {
+		glib.IdleAdd(func() {
+			glib.TimeoutAdd(1000, func() bool {
+				gui.showAddToStartupToast()
+				return false
+			})
+		})
+	}
 }
 
 func (gui *GUI) handleRunOnStartup(action *gio.SimpleAction) {
-	currentState := gui.hasStartupEntry()
+	currentState := action.State().Boolean()
 	newState := glib.NewVariantBoolean(!currentState)
 	action.SetState(newState)
 	if newState.Boolean() {
@@ -496,4 +505,50 @@ func (gui *GUI) hasStartupEntry() bool {
 		return true
 	}
 	return false
+}
+
+func (gui *GUI) showAddToStartupToast() {
+	revealer := gtk.NewRevealer()
+	revealer.SetTransitionType(gtk.RevealerTransitionTypeSlideDown)
+	revealer.SetTransitionDuration(300)
+
+	toastBox := gtk.NewBox(gtk.OrientationHorizontal, 10)
+	toastBox.SetHAlign(gtk.AlignCenter)
+	toastBox.SetMarginTop(10)
+	toastBox.SetMarginBottom(10)
+	toastBox.SetMarginStart(20)
+	toastBox.SetMarginEnd(20)
+	toastBox.AddCSSClass("toast")
+
+	label := gtk.NewLabel("Go the menu to add Clyp to the system startup.")
+	label.SetHAlign(gtk.AlignCenter)
+	toastBox.Append(label)
+
+	closeButton := gtk.NewButtonFromIconName("window-close-symbolic")
+	closeButton.SetHasFrame(false)
+	toastBox.Append(closeButton)
+
+	revealer.SetChild(toastBox)
+
+	mainBox := gui.window.Child().(*gtk.Box)
+	mainBox.Prepend(revealer)
+
+	revealer.SetRevealChild(true)
+
+	glib.TimeoutAdd(3000, func() bool {
+		revealer.SetRevealChild(false)
+		glib.TimeoutAdd(300, func() bool {
+			mainBox.Remove(revealer)
+			return false
+		})
+		return false
+	})
+
+	closeButton.ConnectClicked(func() {
+		revealer.SetRevealChild(false)
+		glib.TimeoutAdd(300, func() bool {
+			mainBox.Remove(revealer)
+			return false
+		})
+	})
 }
