@@ -20,6 +20,8 @@ var (
 	uiXML string
 	//go:embed resources/css/style.css
 	cssData string
+	//go:embed resources/clyp-watcher.desktop
+	watcherFile string
 )
 
 type GUI struct {
@@ -36,11 +38,9 @@ func (gui *GUI) init() {
 	gtkApp.ConnectShutdown(func() { gui.shutdown(gtkApp) })
 	gtkApp.ConnectAfter("activate", func() {
 		go ipc.listen()
-		var cmd string
+		cmd := "clyp"
 		if os.Getenv("RUN_ENV") == "dev" {
 			cmd = "./clyp"
-		} else {
-			cmd = "clyp"
 		}
 		watcher := *exec.Command(cmd, "watch")
 		if err := watcher.Start(); err != nil {
@@ -72,6 +72,7 @@ func (gui *GUI) activate(gtkApp *gtk.Application) {
 	gui.setupEvents(gtkApp)
 	gui.setupShortcutsAction(gtkApp)
 	gui.setupAboutAction(gtkApp)
+	gui.setupTestCheckAction(gtkApp)
 	gui.setupStyleSupport()
 	gui.window.SetApplication(gtkApp)
 	gui.window.SetVisible(true)
@@ -435,4 +436,64 @@ func (gui *GUI) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog.SetWebsite("https://github.com/murat-cileli/clyp")
 	aboutDialog.SetWebsiteLabel("https://github.com/murat-cileli/clyp")
 	aboutDialog.SetVisible(true)
+}
+
+func (gui *GUI) setupTestCheckAction(gtkApp *gtk.Application) {
+	initialState := glib.NewVariantBoolean(false)
+	actionRunOnStartup := gio.NewSimpleActionStateful("run_on_startup", nil, initialState)
+	actionRunOnStartup.ConnectActivate(func(parameter *glib.Variant) {
+		gui.handleRunOnStartup(actionRunOnStartup)
+	})
+	gtkApp.AddAction(actionRunOnStartup)
+}
+
+func (gui *GUI) handleRunOnStartup(action *gio.SimpleAction) {
+	currentState := gui.hasStartupEntry()
+	newState := glib.NewVariantBoolean(!currentState)
+	action.SetState(newState)
+	if newState.Boolean() {
+		gui.addStartupEntry()
+	} else {
+		gui.removeStartupEntry()
+	}
+}
+
+func (gui *GUI) addStartupEntry() {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Printf("Failed to get user home directory: %v", err)
+		return
+	}
+	autoStartdesktopFile := userHomeDir + "/.config/autostart/clyp-watcher.desktop"
+	err = os.WriteFile(autoStartdesktopFile, []byte(watcherFile), 0644)
+	if err != nil {
+		log.Printf("Failed to write desktop file: %v", err)
+	}
+}
+
+func (gui *GUI) removeStartupEntry() {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Printf("Failed to get user home directory: %v", err)
+		return
+	}
+	autoStartdesktopFile := userHomeDir + "/.config/autostart/clyp-watcher.desktop"
+	err = os.Remove(autoStartdesktopFile)
+	if err != nil {
+		log.Printf("Failed to remove desktop file: %v", err)
+	}
+}
+
+func (gui *GUI) hasStartupEntry() bool {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Printf("Failed to get user home directory: %v", err)
+		return false
+	}
+	autoStartdesktopFile := userHomeDir + "/.config/autostart/clyp-watcher.desktop"
+	_, err = os.Stat(autoStartdesktopFile)
+	if err == nil {
+		return true
+	}
+	return false
 }

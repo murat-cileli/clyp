@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Clyp
+Comment=Clipboard manager.
+Categories=Utility;
+Icon=bio.murat.clyp
+Exec=clyp watch
+Terminal=false

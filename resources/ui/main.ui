@@ -135,6 +135,12 @@
   <menu id="primary_menu">
     <section>
       <item>
+        <attribute name="label" translatable="yes">Run on Startup</attribute>
+        <attribute name="action">app.run_on_startup</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
         <attribute name="label" translatable="yes">Shortcuts</attribute>
         <attribute name="action">app.shortcuts</attribute>
       </item>
