@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	_ "os/exec"
 	"strconv"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
