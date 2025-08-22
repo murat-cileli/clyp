@@ -432,7 +432,7 @@ func (gui *GUI) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog.SetModal(true)
 	aboutDialog.SetVersion("0.9.11")
 	aboutDialog.SetProgramName("Clyp")
-	aboutDialog.SetCopyright("Developer: Murat Çileli\nIcon by Freepik from flaticon.com")
+	aboutDialog.SetComments("Clipboard manager.")
 	aboutDialog.SetWebsite("https://github.com/murat-cileli/clyp")
 	aboutDialog.SetWebsiteLabel("https://github.com/murat-cileli/clyp")
 	aboutDialog.SetVisible(true)
