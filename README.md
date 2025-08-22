@@ -15,9 +15,19 @@ Modern, fast, simple clipboard manager for Linux.
 
 ## Installation
 
-- Download [Ubuntu](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp_0.9.2_UBUNTU_amd64.deb) or [Arch Linux](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst) package.  
-- Visit [latest release](https://github.com/murat-cileli/clyp/releases/latest) to download binares.  
-- Flatpak is work in progess.
+### Debian / Ubuntu and Derivatives
+- Download [DEB Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp_0.9.2_UBUNTU_amd64.deb)
+- `apt install ./clyp_0.9.2_UBUNTU_amd64.deb`
+
+> [!NOTE]
+> Depends on `libgtk-4-dev`
+
+### Arch Linux and Derivatives
+- Download [Arch Linux Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst)  
+- `pacman -U clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst`
+
+> [!NOTE]
+> Depends on `gtk4`
 
 ## Usage
 
