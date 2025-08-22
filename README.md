@@ -10,7 +10,7 @@ Modern, fast, simple clipboard manager for Linux.
 - **Modern, clean, simple interface** with minimal distractions.
 - **Keyboard centric** - Navigate, search, copy and delete items with keyboard.
 - **High performance** - Optimized SQLite backend tested with 10,000+ records.
-- **Supports text and image content** with image previews.
+- **Supports text and image content** (up to 3 images) with image previews.
 - **Full Wayland support** - Works natively on both Wayland and X11.
 
 ## Installation
@@ -47,6 +47,10 @@ Or launch from your application menu.
 5. **Delete Items**: Select unwanted items and press `Delete` to remove them
 
 ## Technical Details
+
+<img src="https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/architecture-1.png?v=2" style="max-width:622px;">
+
+The watcher is a minimal headless Gtk application. It monitors the clipboard and notifies the GUI of database changes via a UNIX socket.
 
 ### Architecture
 - **Language**: Go 1.25.0
