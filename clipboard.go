@@ -13,7 +13,7 @@ import (
 )
 
 type Clipboard struct {
-	clipboard     *gdk.Clipboard
+	clipboard     gdk.Clipboard
 	itemCount     int
 	recentContent string
 }
@@ -31,7 +31,7 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 	var err error
 
 	if database.searchFilter != "" {
-		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 50`
+		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 30`
 		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%")
 	} else {
 		database.query = database.queryBase
@@ -64,7 +64,7 @@ func (clipboard *Clipboard) count() {
 }
 
 func (clipboard *Clipboard) watch() {
-	clipboard.clipboard = gdk.DisplayGetDefault().Clipboard()
+	clipboard.clipboard = *gdk.DisplayGetDefault().Clipboard()
 	clipboard.clipboard.ConnectChanged(func() {
 		formats := clipboard.clipboard.Formats().String()
 		if formats == "" {

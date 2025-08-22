@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
+
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 )
 
 type IPC struct{}
@@ -14,7 +17,11 @@ func (ipc *IPC) notify() {
 		return
 	}
 	defer conn.Close()
-	conn.Write([]byte("1"))
+	_, err = conn.Write([]byte("1"))
+	if err != nil {
+		log.Printf("Failed to write to socket: %v", err)
+		return
+	}
 }
 
 func (ipc *IPC) listen() {
@@ -31,10 +38,15 @@ func (ipc *IPC) listen() {
 			continue
 		}
 		b := make([]byte, 1)
-		conn.Read(b)
-		if b[0] == '1' {
-			gui.updateClipboardRows(true)
+		_, err = conn.Read(b)
+		if err != nil {
+			log.Printf("Failed to read from socket: %v", err)
+			continue
 		}
+		glib.IdleAdd(func() {
+			gui.updateClipboardRows(true)
+			gui.focusFirstClipboardListItem()
+		})
 		conn.Close()
 	}
 }

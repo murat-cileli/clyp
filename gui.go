@@ -54,7 +54,10 @@ func (gui *GUI) activate(gtkApp *gtk.Application) {
 	gui.searchBar = builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
 	gui.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
 	gui.setupCSS()
-	gui.updateClipboardRows(true)
+	glib.IdleAdd(func() {
+		gui.updateClipboardRows(true)
+		gui.focusFirstClipboardListItem()
+	})
 	gui.setupEvents(gtkApp)
 	gui.setupShortcutsAction(gtkApp)
 	gui.setupAboutAction(gtkApp)
@@ -247,7 +250,10 @@ func (gui *GUI) setupClipBoardListEvents() {
 			if selectedRow != nil {
 				gui.closeSearchBar()
 				clipboard.copy(selectedRow.Name())
-				gui.updateClipboardRows(true)
+				glib.IdleAdd(func() {
+					gui.updateClipboardRows(true)
+					gui.focusFirstClipboardListItem()
+				})
 				return true
 			}
 		}
@@ -256,7 +262,10 @@ func (gui *GUI) setupClipBoardListEvents() {
 			selectedRow := gui.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
 				clipboard.removeFromDatabase(selectedRow.Name())
-				gui.updateClipboardRows(true)
+				glib.IdleAdd(func() {
+					gui.updateClipboardRows(true)
+					gui.focusFirstClipboardListItem()
+				})
 				return true
 			}
 		}
@@ -277,7 +286,10 @@ func (gui *GUI) setupClipBoardListEvents() {
 			if selectedRow != nil {
 				gui.closeSearchBar()
 				clipboard.copy(selectedRow.Name())
-				gui.updateClipboardRows(true)
+				glib.IdleAdd(func() {
+					gui.updateClipboardRows(true)
+					gui.focusFirstClipboardListItem()
+				})
 			}
 		}
 	})
@@ -319,12 +331,17 @@ func (gui *GUI) setupSearchBarEvents() {
 	gui.searchEntry.ConnectSearchChanged(func() {
 		if gui.searchEntry.Text() == "" {
 			database.searchFilter = ""
-			gui.updateClipboardRows(false)
+			glib.IdleAdd(func() {
+				gui.updateClipboardRows(true)
+				gui.focusFirstClipboardListItem()
+			})
 			gui.closeSearchBar()
 			return
 		}
 		database.searchFilter = gui.searchEntry.Text()
-		gui.updateClipboardRows(false)
+		glib.IdleAdd(func() {
+			gui.updateClipboardRows(true)
+		})
 	})
 	gui.searchBar.ConnectEntry(gui.searchEntry)
 	gui.searchToggleButton.ConnectToggled(func() {
