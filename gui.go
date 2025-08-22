@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"log"
 	"os"
+	"os/exec"
+	_ "os/exec"
 	"strconv"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
@@ -35,6 +37,16 @@ func (gui *GUI) init() {
 	gtkApp.ConnectShutdown(func() { gui.shutdown(gtkApp) })
 	gtkApp.ConnectAfter("activate", func() {
 		go ipc.listen()
+		go func() {
+			cmd := "clyp"
+			var watcher exec.Cmd
+			if os.Getenv("RUN_ENV") == "dev" {
+				watcher = *exec.Command("./"+cmd, "watch")
+			}
+			if err := watcher.Run(); err != nil {
+				log.Println(err.Error())
+			}
+		}()
 	})
 
 	if code := gtkApp.Run(os.Args); code > 0 {

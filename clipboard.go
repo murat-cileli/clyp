@@ -149,6 +149,10 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 		return
 	}
 
+	if itemType == 2 {
+		database.db.Exec("DELETE FROM clipboard WHERE type=2")
+	}
+
 	_, err := database.db.Exec("INSERT INTO clipboard (content, type) VALUES (?, ?)", content, itemType)
 	if err == nil {
 		clipboard.recentContent = content
@@ -166,9 +170,11 @@ func (clipboard *Clipboard) copy(id string) {
 	row := database.db.QueryRow("SELECT content, type FROM clipboard WHERE id=? LIMIT 1", id)
 	row.Scan(&content, &itemType)
 
+	clipboardInstance := gdk.DisplayGetDefault().Clipboard()
+
 	switch itemType {
 	case 1:
-		clipboard.clipboard.SetText(content)
+		clipboardInstance.SetText(content)
 		clipboard.updateItemDateTime(id)
 	case 2:
 		decoded, err := base64.StdEncoding.DecodeString(content)
@@ -181,9 +187,11 @@ func (clipboard *Clipboard) copy(id string) {
 			log.Printf("Failed to create texture from bytes: %v", err)
 			return
 		}
-		clipboard.clipboard.SetTexture(texture)
+		clipboardInstance.SetTexture(texture)
 		clipboard.updateItemDateTime(id)
 	}
+
+	clipboardInstance = nil
 }
 
 func (clipboard *Clipboard) updateItemDateTime(id string) {
