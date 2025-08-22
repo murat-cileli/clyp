@@ -36,11 +36,13 @@ func (gui *GUI) init() {
 	gtkApp.ConnectShutdown(func() { gui.shutdown(gtkApp) })
 	gtkApp.ConnectAfter("activate", func() {
 		go ipc.listen()
-		cmd := "clyp"
-		var watcher *exec.Cmd
+		var cmd string
 		if os.Getenv("RUN_ENV") == "dev" {
-			watcher = exec.Command("./"+cmd, "watch")
+			cmd = "./clyp"
+		} else {
+			cmd = "clyp"
 		}
+		watcher := *exec.Command(cmd, "watch")
 		if err := watcher.Start(); err != nil {
 			log.Println(err.Error())
 		}
