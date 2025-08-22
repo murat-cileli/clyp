@@ -8,6 +8,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var clipboard Clipboard
+
 type Application struct {
 	name    string
 	id      string

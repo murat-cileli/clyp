@@ -9,6 +9,7 @@ var (
 	gui      GUI
 	service  Service
 	database Database
+	ipc      IPC
 )
 
 func main() {

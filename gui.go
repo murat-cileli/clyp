@@ -33,6 +33,9 @@ func (gui *GUI) init() {
 	gtkApp := gtk.NewApplication(app.id, gio.ApplicationFlagsNone)
 	gtkApp.ConnectActivate(func() { gui.activate(gtkApp) })
 	gtkApp.ConnectShutdown(func() { gui.shutdown(gtkApp) })
+	gtkApp.ConnectAfter("activate", func() {
+		go ipc.listen()
+	})
 
 	if code := gtkApp.Run(os.Args); code > 0 {
 		os.Exit(code)
@@ -242,8 +245,9 @@ func (gui *GUI) setupClipBoardListEvents() {
 		if keyval == gdk.KEY_Return || keyval == gdk.KEY_KP_Enter {
 			selectedRow := gui.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
-				clipboard.copy(selectedRow.Name())
 				gui.closeSearchBar()
+				clipboard.copy(selectedRow.Name())
+				gui.updateClipboardRows(true)
 				return true
 			}
 		}
@@ -271,8 +275,9 @@ func (gui *GUI) setupClipBoardListEvents() {
 		if nPress == 2 {
 			selectedRow := gui.clipboardItemsList.SelectedRow()
 			if selectedRow != nil {
-				clipboard.copy(selectedRow.Name())
 				gui.closeSearchBar()
+				clipboard.copy(selectedRow.Name())
+				gui.updateClipboardRows(true)
 			}
 		}
 	})

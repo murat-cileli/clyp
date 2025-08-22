@@ -67,6 +67,9 @@ func (clipboard *Clipboard) watch() {
 	clipboard.clipboard = gdk.DisplayGetDefault().Clipboard()
 	clipboard.clipboard.ConnectChanged(func() {
 		formats := clipboard.clipboard.Formats().String()
+		if formats == "" {
+			return
+		}
 		if strings.Contains(formats, "text/") {
 			clipboard.readTextContent()
 		} else if strings.Contains(formats, "image/") {
@@ -148,8 +151,8 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 
 	_, err := database.db.Exec("INSERT INTO clipboard (content, type) VALUES (?, ?)", content, itemType)
 	if err == nil {
-		//app.updateClipboardRows(true)
 		clipboard.recentContent = content
+		ipc.notify()
 	}
 }
 
@@ -193,8 +196,6 @@ func (clipboard *Clipboard) updateItemDateTime(id string) {
 		log.Printf("Failed to update item date time: %v", err)
 		return
 	}
-
-	//app.updateClipboardRows(true)
 }
 
 func (clipboard *Clipboard) removeFromDatabase(id string) {
