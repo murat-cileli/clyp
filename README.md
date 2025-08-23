@@ -84,6 +84,28 @@ Clyp follows XDG Base Directory specifications:
 ## Development
 
 ### Building from Source
+
+#### Ubuntu 
+
+```bash
+git clone https://github.com/murat-cileli/clyp.git
+cd clyp
+go mod download
+sudo apt install -y \           
+  libglib2.0-dev \
+  libgirepository1.0-dev \
+  libgraphene-1.0-dev \
+  libcairo2-dev \
+  pkg-config \
+  build-essential \
+  libpango1.0-dev \
+  libgdk-pixbuf-2.0-dev \
+  libgtk-4-dev
+go build .
+```
+
+#### Others
+
 ```bash
 git clone https://github.com/murat-cileli/clyp.git
 cd clyp
