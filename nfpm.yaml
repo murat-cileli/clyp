@@ -2,7 +2,7 @@
 name: "clyp"
 arch: "amd64"
 platform: "linux"
-version: 0.9.2
+version: 0.9.3
 section: "utils"
 priority: "optional"
 replaces:
@@ -29,7 +29,7 @@ contents:
 overrides:
   deb:
     depends:
-      - libgtk-4-dev
+      - libgtk-4-bin
   archlinux:
     depends:
       - gtk4

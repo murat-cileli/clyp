@@ -16,15 +16,15 @@ Modern, fast, simple clipboard manager for Linux.
 ## Installation
 
 ### Debian 13 / Ubuntu 24.04 and Later
-- Download [DEB Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp_0.9.2_UBUNTU_amd64.deb)
-- `apt install ./clyp_0.9.2_UBUNTU_amd64.deb`
+- Download [DEB Package](https://github.com/murat-cileli/clyp/releases/download/0.9.3/clyp_0.9.3_amd64.deb)
+- `apt install ./clyp_0.9.3_amd64.deb`
 
 > [!IMPORTANT]
-> Depends on `libgtk-4-dev`
+> Depends on `libgtk-4-bin`
 
 ### Arch Linux / Manjaro
-- Download [Arch Linux Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst)  
-- `pacman -U clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst`
+- Download [Arch Linux Package](https://github.com/murat-cileli/clyp/releases/download/0.9.3/clyp-0.9.3-1-x86_64.pkg.tar.zst)  
+- `pacman -U clyp-0.9.3-1-x86_64.pkg.tar.zst`
 
 > [!IMPORTANT]
 > Depends on `gtk4`
