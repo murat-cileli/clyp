@@ -10,15 +10,24 @@ Modern, fast, simple clipboard manager for Linux.
 - **Modern, clean, simple interface** with minimal distractions.
 - **Keyboard centric** - Navigate, search, copy and delete items with keyboard.
 - **High performance** - Optimized SQLite backend tested with 10,000+ records.
-- **Supports text and image content** with image previews.
+- **Supports text and image content** (up to 3 images) with image previews.
 - **Full Wayland support** - Works natively on both Wayland and X11.
 
 ## Installation
 
-Go to [latest release](https://github.com/murat-cileli/clyp/releases/latest) and download
-- **.deb** for **Ubuntu**
-- **pkg.tar.zst** for **Arch Linux**
-- or **tar.gz** for binary.
+### Debian / Ubuntu and Derivatives
+- Download [DEB Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp_0.9.2_UBUNTU_amd64.deb)
+- `apt install ./clyp_0.9.2_UBUNTU_amd64.deb`
+
+> [!IMPORTANT]
+> Depends on `libgtk-4-dev`
+
+### Arch Linux and Derivatives
+- Download [Arch Linux Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst)  
+- `pacman -U clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst`
+
+> [!IMPORTANT]
+> Depends on `gtk4`
 
 ## Usage
 
@@ -48,6 +57,10 @@ Or launch from your application menu.
 5. **Delete Items**: Select unwanted items and press `Delete` to remove them
 
 ## Technical Details
+
+<img src="https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/architecture-1.png?v=2" style="max-width:622px;">
+
+The watcher is a minimal headless Gtk application. It monitors the clipboard and notifies the GUI of database changes via a UNIX socket.
 
 ### Architecture
 - **Language**: Go 1.25.0
@@ -94,7 +107,7 @@ go build .
 ```
 
 ### TODO
-- Add support for running in the background. [**WORK IN PROGRESS!**]
+- Add import/export.
 - Add database encryption.
 
 ### CREDITS
