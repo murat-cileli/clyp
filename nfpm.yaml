@@ -2,7 +2,7 @@
 name: "clyp"
 arch: "amd64"
 platform: "linux"
-version: 0.9.4
+version: 0.9.5
 section: "utils"
 priority: "optional"
 replaces:

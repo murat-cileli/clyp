@@ -430,7 +430,7 @@ func (gui *GUI) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog.SetTransientFor(&parent.Window)
 	aboutDialog.SetLogoIconName("bio.murat.clyp")
 	aboutDialog.SetModal(true)
-	aboutDialog.SetVersion("0.9.4")
+	aboutDialog.SetVersion("0.9.5")
 	aboutDialog.SetProgramName("Clyp")
 	aboutDialog.SetComments("Clipboard manager.")
 	aboutDialog.SetWebsite("https://github.com/murat-cileli/clyp")
