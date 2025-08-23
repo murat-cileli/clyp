@@ -42,7 +42,7 @@ func (gui *GUI) init() {
 		if os.Getenv("RUN_ENV") == "dev" {
 			cmd = "./clyp"
 		}
-		watcher := *exec.Command(cmd, "watch")
+		watcher := exec.Command(cmd, "watch")
 		if err := watcher.Start(); err != nil {
 			log.Println(err.Error())
 		}
@@ -430,7 +430,7 @@ func (gui *GUI) showAboutDialog(parent *gtk.ApplicationWindow) {
 	aboutDialog.SetTransientFor(&parent.Window)
 	aboutDialog.SetLogoIconName("bio.murat.clyp")
 	aboutDialog.SetModal(true)
-	aboutDialog.SetVersion("0.9.3")
+	aboutDialog.SetVersion("0.9.4")
 	aboutDialog.SetProgramName("Clyp")
 	aboutDialog.SetComments("Clipboard manager.")
 	aboutDialog.SetWebsite("https://github.com/murat-cileli/clyp")

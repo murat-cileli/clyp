@@ -11,7 +11,7 @@ import (
 type Service struct{}
 
 func (service *Service) init() {
-	gtkServiceApp := gtk.NewApplication("bio.murat.clyp", gio.ApplicationDefaultFlags)
+	gtkServiceApp := gtk.NewApplication("bio.murat.clyp-watcher", gio.ApplicationDefaultFlags)
 	gtkServiceApp.ConnectActivate(func() { service.activate(gtkServiceApp) })
 
 	if code := gtkServiceApp.Run(nil); code > 0 {
