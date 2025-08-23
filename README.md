@@ -103,17 +103,7 @@ sudo apt install -y \
   libgtk-4-dev
 go build .
 ```
-
-#### Others
-
-```bash
-git clone https://github.com/murat-cileli/clyp.git
-cd clyp
-go mod download
-go build .
-```
-
-### Dependencies
+### Go Dependencies
 - `github.com/diamondburned/gotk4/pkg` - GTK4 bindings for Go
 - `github.com/mattn/go-sqlite3` - SQLite3 driver for Go
 
