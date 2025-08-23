@@ -91,7 +91,7 @@ Clyp follows XDG Base Directory specifications:
 git clone https://github.com/murat-cileli/clyp.git
 cd clyp
 go mod download
-sudo apt install -y \           
+sudo apt install -y \
   libglib2.0-dev \
   libgirepository1.0-dev \
   libgraphene-1.0-dev \
