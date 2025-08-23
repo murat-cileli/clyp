@@ -15,14 +15,14 @@ Modern, fast, simple clipboard manager for Linux.
 
 ## Installation
 
-### Debian / Ubuntu and Derivatives
+### Debian 13 / Ubuntu 22.04+ and Derivatives
 - Download [DEB Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp_0.9.2_UBUNTU_amd64.deb)
 - `apt install ./clyp_0.9.2_UBUNTU_amd64.deb`
 
 > [!IMPORTANT]
 > Depends on `libgtk-4-dev`
 
-### Arch Linux and Derivatives
+### Arch Linux / Manjaro and Derivatives
 - Download [Arch Linux Package](https://github.com/murat-cileli/clyp/releases/download/0.9.2/clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst)  
 - `pacman -U clyp-0.9.2-1-ARCHLINUX-x86_64.pkg.tar.zst`
 
