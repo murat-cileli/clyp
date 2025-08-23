@@ -33,7 +33,7 @@ type GUI struct {
 }
 
 func (gui *GUI) init() {
-	gtkApp := gtk.NewApplication(app.id, gio.ApplicationFlagsNone)
+	gtkApp := gtk.NewApplication(app.id, gio.ApplicationDefaultFlags)
 	gtkApp.ConnectActivate(func() { gui.activate(gtkApp) })
 	gtkApp.ConnectShutdown(func() { gui.shutdown(gtkApp) })
 	gtkApp.ConnectAfter("activate", func() {
