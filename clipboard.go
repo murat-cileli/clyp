@@ -79,10 +79,10 @@ func (clipboard *Clipboard) watch() {
 		if strings.TrimSpace(formats) == "" {
 			return
 		}
-		if strings.Contains(formats, "text/") {
-			clipboard.readTextContent()
-		} else if strings.Contains(formats, "image/") {
+		if strings.Contains(formats, "image/") {
 			clipboard.readImageContent()
+		} else if strings.Contains(formats, "text/") {
+			clipboard.readTextContent()
 		} else {
 			log.Printf("Unsupported clipboard format: %s", formats)
 		}
