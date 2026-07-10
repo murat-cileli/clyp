@@ -51,7 +51,7 @@
           </object>
         </child>
         <child>
-          <object class="GtkScrolledWindow">
+          <object class="GtkScrolledWindow" id="clipboard_scrolled_window">
             <property name="halign">fill</property>
             <property name="valign">fill</property>
             <property name="vexpand">true</property>

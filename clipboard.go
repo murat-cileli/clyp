@@ -26,17 +26,21 @@ type ClipboardItem struct {
 	itemType byte
 }
 
-func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error) {
+func (clipboard *Clipboard) items(updateItemCount bool, limit, offset int) ([]ClipboardItem, error) {
 	var items []ClipboardItem
 	var rows *sql.Rows
 	var err error
 
+	if updateItemCount {
+		clipboard.count()
+	}
+
 	if database.searchFilter != "" {
-		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC`
-		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%")
+		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT ? OFFSET ?`
+		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%", limit, offset)
 	} else {
-		database.query = database.queryBase
-		rows, err = database.db.Query(database.query)
+		database.query = database.queryBase + " LIMIT ? OFFSET ?"
+		rows, err = database.db.Query(database.query, limit, offset)
 	}
 
 	if err != nil {
@@ -52,15 +56,16 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 		items = append(items, item)
 	}
 
-	if updateItemCount {
-		clipboard.count()
-	}
-
 	return items, nil
 }
 
 func (clipboard *Clipboard) count() {
-	rowTotalItemsCount := database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard")
+	var rowTotalItemsCount *sql.Row
+	if database.searchFilter != "" {
+		rowTotalItemsCount = database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard WHERE type=1 AND content LIKE ?", "%"+database.searchFilter+"%")
+	} else {
+		rowTotalItemsCount = database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard")
+	}
 	rowTotalItemsCount.Scan(&clipboard.itemCount)
 }
 

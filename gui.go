@@ -25,14 +25,19 @@ var (
 	watcherFile string
 )
 
+const clipboardItemsPageSize = 30
+
 type GUI struct {
 	clipboardItemsList *gtk.ListBox
+	clipboardScrolled  *gtk.ScrolledWindow
 	searchEntry        *gtk.SearchEntry
 	searchBar          *gtk.SearchBar
 	searchToggleButton *gtk.ToggleButton
 	window             *gtk.ApplicationWindow
 	runOnStartupAction *gio.SimpleAction
 	closeOnCopyAction  *gio.SimpleAction
+	loadedItems        int
+	loadingItems       bool
 }
 
 func (gui *GUI) init() {
@@ -49,6 +54,7 @@ func (gui *GUI) activate(gtkApp *gtk.Application) {
 	builder := gtk.NewBuilderFromString(uiXML)
 	gui.window = builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
 	gui.clipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
+	gui.clipboardScrolled = builder.GetObject("clipboard_scrolled_window").Cast().(*gtk.ScrolledWindow)
 	gui.searchEntry = builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
 	gui.searchBar = builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
 	gui.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
@@ -119,13 +125,31 @@ func (gui *GUI) updateTitle(itemsShowing, itemsTotal string) {
 
 func (gui *GUI) updateClipboardRows(updateItemCount bool) {
 	gui.clipboardItemsList.RemoveAll()
-	items, err := clipboard.items(updateItemCount)
+	gui.loadedItems = 0
+	gui.loadClipboardRows(updateItemCount)
+}
+
+func (gui *GUI) loadClipboardRows(updateItemCount bool) {
+	if gui.loadingItems {
+		return
+	}
+	if gui.loadedItems > 0 && gui.loadedItems >= clipboard.itemCount {
+		return
+	}
+
+	gui.loadingItems = true
+	defer func() {
+		gui.loadingItems = false
+	}()
+
+	items, err := clipboard.items(updateItemCount, clipboardItemsPageSize, gui.loadedItems)
 	if err != nil {
 		log.Printf("Error getting clipboard items: %v", err)
 		return
 	}
 
-	gui.updateTitle(strconv.Itoa(len(items)), strconv.Itoa(clipboard.itemCount))
+	gui.loadedItems += len(items)
+	gui.updateTitle(strconv.Itoa(gui.loadedItems), strconv.Itoa(clipboard.itemCount))
 
 	if len(items) == 0 {
 		return
@@ -254,6 +278,7 @@ func (gui *GUI) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, maxSize 
 func (gui *GUI) setupEvents(gtkApp *gtk.Application) {
 	gui.setupAppEvents(gtkApp)
 	gui.setupClipBoardListEvents(gtkApp)
+	gui.setupScrollEvents()
 	gui.setupWindowEvents()
 	gui.setupSearchBarEvents()
 }
@@ -286,8 +311,8 @@ func (gui *GUI) setupClipBoardListEvents(gtkApp *gtk.Application) {
 
 		if keyval == gdk.KEY_Delete {
 			selectedRow := gui.clipboardItemsList.SelectedRow()
-			selectedRowIndex := selectedRow.Index()
 			if selectedRow != nil {
+				selectedRowIndex := selectedRow.Index()
 				clipboard.removeFromDatabase(selectedRow.Name())
 				gui.updateClipboardRows(true)
 				gui.focusClipboardItemByIndex(selectedRowIndex)
@@ -328,6 +353,21 @@ func (gui *GUI) setupClipBoardListEvents(gtkApp *gtk.Application) {
 	gui.clipboardItemsList.AddController(clipboardListkeyController)
 	gui.clipboardItemsList.AddController(gestureClick)
 
+}
+
+func (gui *GUI) setupScrollEvents() {
+	gui.clipboardScrolled.ConnectEdgeReached(func(pos gtk.PositionType) {
+		if pos == gtk.PosBottom {
+			gui.loadClipboardRows(false)
+		}
+	})
+
+	adjustment := gui.clipboardScrolled.VAdjustment()
+	adjustment.ConnectValueChanged(func() {
+		if adjustment.Value()+adjustment.PageSize() >= adjustment.Upper()-48 {
+			gui.loadClipboardRows(false)
+		}
+	})
 }
 
 func (gui *GUI) setupWindowEvents() {
@@ -416,13 +456,13 @@ func (gui *GUI) setupSearchBarEvents() {
 	gui.searchEntry.ConnectSearchChanged(func() {
 		if gui.searchEntry.Text() == "" {
 			database.searchFilter = ""
-			gui.updateClipboardRows(false)
+			gui.updateClipboardRows(true)
 			gui.focusClipboardItemByIndex(0)
 			gui.searchBarControl("hide")
 			return
 		}
 		database.searchFilter = gui.searchEntry.Text()
-		gui.updateClipboardRows(false)
+		gui.updateClipboardRows(true)
 	})
 	gui.searchBar.ConnectEntry(gui.searchEntry)
 	gui.searchToggleButton.ConnectToggled(func() {
