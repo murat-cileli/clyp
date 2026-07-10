@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
@@ -150,10 +151,12 @@ func (gui *GUI) addTextRow(item ClipboardItem) {
 	box.SetMarginEnd(12)
 	box.AddCSSClass("item-box")
 
-	if len(item.content) > 100 {
-		item.content = item.content[:100] + "\n..."
+	content := strings.ToValidUTF8(item.content, "")
+	contentRunes := []rune(content)
+	if len(contentRunes) > 100 {
+		content = string(contentRunes[:100]) + "\n..."
 	}
-	contentLabel := gtk.NewLabel(item.content)
+	contentLabel := gtk.NewLabel(content)
 	contentLabel.SetWrap(true)
 	contentLabel.SetWrapMode(pango.WrapWordChar)
 	contentLabel.SetXAlign(0)
