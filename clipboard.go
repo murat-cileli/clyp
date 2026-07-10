@@ -32,7 +32,7 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 	var err error
 
 	if database.searchFilter != "" {
-		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 30`
+		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC`
 		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%")
 	} else {
 		database.query = database.queryBase
