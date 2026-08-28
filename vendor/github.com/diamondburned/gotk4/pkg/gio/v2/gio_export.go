@@ -174,7 +174,9 @@ func _gotk4_gio2_DBusInterfaceGetPropertyFunc(arg1 *C.GDBusConnection, arg2 *C.g
 	var _propertyName string        // out
 
 	_connection = wrapDBusConnection(coreglib.Take(unsafe.Pointer(arg1)))
-	_sender = C.GoString((*C.gchar)(unsafe.Pointer(arg2)))
+	if arg2 != nil {
+		_sender = C.GoString((*C.gchar)(unsafe.Pointer(arg2)))
+	}
 	_objectPath = C.GoString((*C.gchar)(unsafe.Pointer(arg3)))
 	_interfaceName = C.GoString((*C.gchar)(unsafe.Pointer(arg4)))
 	_propertyName = C.GoString((*C.gchar)(unsafe.Pointer(arg5)))
@@ -212,9 +214,13 @@ func _gotk4_gio2_DBusInterfaceMethodCallFunc(arg1 *C.GDBusConnection, arg2 *C.gc
 	var _invocation *DBusMethodInvocation // out
 
 	_connection = wrapDBusConnection(coreglib.Take(unsafe.Pointer(arg1)))
-	_sender = C.GoString((*C.gchar)(unsafe.Pointer(arg2)))
+	if arg2 != nil {
+		_sender = C.GoString((*C.gchar)(unsafe.Pointer(arg2)))
+	}
 	_objectPath = C.GoString((*C.gchar)(unsafe.Pointer(arg3)))
-	_interfaceName = C.GoString((*C.gchar)(unsafe.Pointer(arg4)))
+	if arg4 != nil {
+		_interfaceName = C.GoString((*C.gchar)(unsafe.Pointer(arg4)))
+	}
 	_methodName = C.GoString((*C.gchar)(unsafe.Pointer(arg5)))
 	_parameters = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(arg6)))
 	C.g_variant_ref(arg6)
@@ -248,7 +254,9 @@ func _gotk4_gio2_DBusInterfaceSetPropertyFunc(arg1 *C.GDBusConnection, arg2 *C.g
 	var _value *glib.Variant        // out
 
 	_connection = wrapDBusConnection(coreglib.Take(unsafe.Pointer(arg1)))
-	_sender = C.GoString((*C.gchar)(unsafe.Pointer(arg2)))
+	if arg2 != nil {
+		_sender = C.GoString((*C.gchar)(unsafe.Pointer(arg2)))
+	}
 	_objectPath = C.GoString((*C.gchar)(unsafe.Pointer(arg3)))
 	_interfaceName = C.GoString((*C.gchar)(unsafe.Pointer(arg4)))
 	_propertyName = C.GoString((*C.gchar)(unsafe.Pointer(arg5)))
@@ -518,7 +526,9 @@ func _gotk4_gio2_SettingsBindSetMapping(arg1 *C.GValue, arg2 *C.GVariantType, ar
 
 	var _ *glib.Variant
 
-	cret = (*C.GVariant)(gextras.StructNative(unsafe.Pointer(variant)))
+	if variant != nil {
+		cret = (*C.GVariant)(gextras.StructNative(unsafe.Pointer(variant)))
+	}
 
 	return cret
 }
@@ -536,14 +546,16 @@ func _gotk4_gio2_SettingsGetMapping(arg1 *C.GVariant, arg2 *C.gpointer, arg3 C.g
 
 	var _value *glib.Variant // out
 
-	_value = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(arg1)))
-	C.g_variant_ref(arg1)
-	runtime.SetFinalizer(
-		gextras.StructIntern(unsafe.Pointer(_value)),
-		func(intern *struct{ C unsafe.Pointer }) {
-			C.g_variant_unref((*C.GVariant)(intern.C))
-		},
-	)
+	if arg1 != nil {
+		_value = (*glib.Variant)(gextras.NewStructNative(unsafe.Pointer(arg1)))
+		C.g_variant_ref(arg1)
+		runtime.SetFinalizer(
+			gextras.StructIntern(unsafe.Pointer(_value)),
+			func(intern *struct{ C unsafe.Pointer }) {
+				C.g_variant_unref((*C.GVariant)(intern.C))
+			},
+		)
+	}
 
 	result, ok := fn(_value)
 
@@ -579,8 +591,10 @@ func _gotk4_gio2_VFSFileLookupFunc(arg1 *C.GVfs, arg2 *C.char, arg3 C.gpointer) 
 
 	var _ *File
 
-	cret = (*C.GFile)(unsafe.Pointer(coreglib.InternObject(file).Native()))
-	C.g_object_ref(C.gpointer(coreglib.InternObject(file).Native()))
+	if file != nil {
+		cret = (*C.GFile)(unsafe.Pointer(coreglib.InternObject(file).Native()))
+		C.g_object_ref(C.gpointer(coreglib.InternObject(file).Native()))
+	}
 
 	return cret
 }
@@ -591,7 +605,7 @@ func _gotk4_gio2_ActionGroup_ConnectActionAdded(arg0 C.gpointer, arg1 *C.gchar, 
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -611,7 +625,7 @@ func _gotk4_gio2_ActionGroup_ConnectActionEnabledChanged(arg0 C.gpointer, arg1 *
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -635,7 +649,7 @@ func _gotk4_gio2_ActionGroup_ConnectActionRemoved(arg0 C.gpointer, arg1 *C.gchar
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -655,7 +669,7 @@ func _gotk4_gio2_ActionGroup_ConnectActionStateChanged(arg0 C.gpointer, arg1 *C.
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -684,7 +698,7 @@ func _gotk4_gio2_DBusObject_ConnectInterfaceAdded(arg0 C.gpointer, arg1 *C.GDBus
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -720,7 +734,7 @@ func _gotk4_gio2_DBusObject_ConnectInterfaceRemoved(arg0 C.gpointer, arg1 *C.GDB
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -756,7 +770,7 @@ func _gotk4_gio2_DBusObjectManager_ConnectInterfaceAdded(arg0 C.gpointer, arg1 *
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -810,7 +824,7 @@ func _gotk4_gio2_DBusObjectManager_ConnectInterfaceRemoved(arg0 C.gpointer, arg1
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -864,7 +878,7 @@ func _gotk4_gio2_DBusObjectManager_ConnectObjectAdded(arg0 C.gpointer, arg1 *C.G
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -900,7 +914,7 @@ func _gotk4_gio2_DBusObjectManager_ConnectObjectRemoved(arg0 C.gpointer, arg1 *C
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -936,7 +950,7 @@ func _gotk4_gio2_Drive_ConnectChanged(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -952,7 +966,7 @@ func _gotk4_gio2_Drive_ConnectDisconnected(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -968,7 +982,7 @@ func _gotk4_gio2_Drive_ConnectEjectButton(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -984,7 +998,7 @@ func _gotk4_gio2_Drive_ConnectStopButton(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1000,7 +1014,7 @@ func _gotk4_gio2_DtlsConnection_ConnectAcceptCertificate(arg0 C.gpointer, arg1 *
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1046,7 +1060,7 @@ func _gotk4_gio2_ListModel_ConnectItemsChanged(arg0 C.gpointer, arg1 C.guint, ar
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1070,7 +1084,7 @@ func _gotk4_gio2_MemoryMonitor_ConnectLowMemoryWarning(arg0 C.gpointer, arg1 C.G
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1090,7 +1104,7 @@ func _gotk4_gio2_Mount_ConnectChanged(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1106,7 +1120,7 @@ func _gotk4_gio2_Mount_ConnectPreUnmount(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1122,7 +1136,7 @@ func _gotk4_gio2_Mount_ConnectUnmounted(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1138,7 +1152,7 @@ func _gotk4_gio2_NetworkMonitor_ConnectNetworkChanged(arg0 C.gpointer, arg1 C.gb
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1160,7 +1174,7 @@ func _gotk4_gio2_Volume_ConnectChanged(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1176,7 +1190,7 @@ func _gotk4_gio2_Volume_ConnectRemoved(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1192,7 +1206,7 @@ func _gotk4_gio2_AppInfoMonitor_ConnectChanged(arg0 C.gpointer, arg1 C.guintptr)
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1276,46 +1290,47 @@ func _gotk4_gio2_AppLaunchContextClass_get_startup_notify_id(arg0 *C.GAppLaunchC
 	var _info AppInfor // out
 	var _files []Filer // out
 
-	{
-		objptr := unsafe.Pointer(arg1)
-		if objptr == nil {
-			panic("object of type gio.AppInfor is nil")
-		}
-
-		object := coreglib.Take(objptr)
-		casted := object.WalkCast(func(obj coreglib.Objector) bool {
-			_, ok := obj.(AppInfor)
-			return ok
-		})
-		rv, ok := casted.(AppInfor)
-		if !ok {
-			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gio.AppInfor")
-		}
-		_info = rv
-	}
-	_files = make([]Filer, 0, gextras.ListSize(unsafe.Pointer(arg2)))
-	gextras.MoveList(unsafe.Pointer(arg2), false, func(v unsafe.Pointer) {
-		src := (*C.GFile)(v)
-		var dst Filer // out
+	if arg1 != nil {
 		{
-			objptr := unsafe.Pointer(src)
-			if objptr == nil {
-				panic("object of type gio.Filer is nil")
-			}
+			objptr := unsafe.Pointer(arg1)
 
 			object := coreglib.Take(objptr)
 			casted := object.WalkCast(func(obj coreglib.Objector) bool {
-				_, ok := obj.(Filer)
+				_, ok := obj.(AppInfor)
 				return ok
 			})
-			rv, ok := casted.(Filer)
+			rv, ok := casted.(AppInfor)
 			if !ok {
-				panic("no marshaler for " + object.TypeFromInstance().String() + " matching gio.Filer")
+				panic("no marshaler for " + object.TypeFromInstance().String() + " matching gio.AppInfor")
 			}
-			dst = rv
+			_info = rv
 		}
-		_files = append(_files, dst)
-	})
+	}
+	if arg2 != nil {
+		_files = make([]Filer, 0, gextras.ListSize(unsafe.Pointer(arg2)))
+		gextras.MoveList(unsafe.Pointer(arg2), false, func(v unsafe.Pointer) {
+			src := (*C.GFile)(v)
+			var dst Filer // out
+			{
+				objptr := unsafe.Pointer(src)
+				if objptr == nil {
+					panic("object of type gio.Filer is nil")
+				}
+
+				object := coreglib.Take(objptr)
+				casted := object.WalkCast(func(obj coreglib.Objector) bool {
+					_, ok := obj.(Filer)
+					return ok
+				})
+				rv, ok := casted.(Filer)
+				if !ok {
+					panic("no marshaler for " + object.TypeFromInstance().String() + " matching gio.Filer")
+				}
+				dst = rv
+			}
+			_files = append(_files, dst)
+		})
+	}
 
 	utf8 := overrides.StartupNotifyID(_info, _files)
 
@@ -1429,7 +1444,7 @@ func _gotk4_gio2_AppLaunchContext_ConnectLaunchFailed(arg0 C.gpointer, arg1 *C.g
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1449,7 +1464,7 @@ func _gotk4_gio2_AppLaunchContext_ConnectLaunchStarted(arg0 C.gpointer, arg1 *C.
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1496,7 +1511,7 @@ func _gotk4_gio2_AppLaunchContext_ConnectLaunched(arg0 C.gpointer, arg1 *C.GAppI
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1811,7 +1826,7 @@ func _gotk4_gio2_Application_ConnectActivate(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1827,7 +1842,7 @@ func _gotk4_gio2_Application_ConnectCommandLine(arg0 C.gpointer, arg1 *C.GApplic
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1853,7 +1868,7 @@ func _gotk4_gio2_Application_ConnectHandleLocalOptions(arg0 C.gpointer, arg1 *C.
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1886,7 +1901,7 @@ func _gotk4_gio2_Application_ConnectNameLost(arg0 C.gpointer, arg1 C.guintptr) (
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1910,7 +1925,7 @@ func _gotk4_gio2_Application_ConnectOpen(arg0 C.gpointer, arg1 **C.GFile, arg2 C
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1954,7 +1969,7 @@ func _gotk4_gio2_Application_ConnectShutdown(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -1970,7 +1985,7 @@ func _gotk4_gio2_Application_ConnectStartup(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2128,7 +2143,7 @@ func _gotk4_gio2_Cancellable_ConnectCancelled(arg0 C.gpointer, arg1 C.guintptr) 
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2144,7 +2159,7 @@ func _gotk4_gio2_DBusAuthObserver_ConnectAllowMechanism(arg0 C.gpointer, arg1 *C
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2172,7 +2187,7 @@ func _gotk4_gio2_DBusAuthObserver_ConnectAuthorizeAuthenticatedPeer(arg0 C.gpoin
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2220,7 +2235,7 @@ func _gotk4_gio2_DBusConnection_ConnectClosed(arg0 C.gpointer, arg1 C.gboolean, 
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2331,7 +2346,7 @@ func _gotk4_gio2_DBusInterfaceSkeleton_ConnectGAuthorizeMethod(arg0 C.gpointer, 
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2389,7 +2404,7 @@ func _gotk4_gio2_DBusObjectManagerClient_ConnectInterfaceProxyPropertiesChanged(
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg5))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2434,7 +2449,7 @@ func _gotk4_gio2_DBusObjectManagerClient_ConnectInterfaceProxySignal(arg0 C.gpoi
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg6))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2510,7 +2525,7 @@ func _gotk4_gio2_DBusObjectSkeleton_ConnectAuthorizeMethod(arg0 C.gpointer, arg1
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2582,7 +2597,7 @@ func _gotk4_gio2_DBusProxy_ConnectGPropertiesChanged(arg0 C.gpointer, arg1 *C.GV
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2623,7 +2638,7 @@ func _gotk4_gio2_DBusProxy_ConnectGSignal(arg0 C.gpointer, arg1 *C.gchar, arg2 *
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2656,7 +2671,7 @@ func _gotk4_gio2_DBusServer_ConnectNewConnection(arg0 C.gpointer, arg1 *C.GDBusC
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -2707,7 +2722,7 @@ func _gotk4_gio2_DebugControllerDBus_ConnectAuthorize(arg0 C.gpointer, arg1 *C.G
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -3285,7 +3300,7 @@ func _gotk4_gio2_FileMonitor_ConnectChanged(arg0 C.gpointer, arg1 *C.GFile, arg2
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -3553,7 +3568,7 @@ func _gotk4_gio2_FilenameCompleter_ConnectGotCompletionData(arg0 C.gpointer, arg
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -3959,7 +3974,7 @@ func _gotk4_gio2_MenuModelClass_get_item_attributes(arg0 *C.GMenuModel, arg1 C.g
 
 	var _ map[string]*glib.Variant
 
-	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
+	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.g_variant_unref))
 	for ksrc, vsrc := range attributes {
 		var kdst *C.gchar    // out
 		var vdst *C.GVariant // out
@@ -4012,7 +4027,7 @@ func _gotk4_gio2_MenuModelClass_get_item_links(arg0 *C.GMenuModel, arg1 C.gint, 
 
 	var _ map[string]MenuModeller
 
-	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.free))
+	*arg2 = C.g_hash_table_new_full(nil, nil, (*[0]byte)(C.free), (*[0]byte)(C.g_object_unref))
 	for ksrc, vsrc := range links {
 		var kdst *C.gchar      // out
 		var vdst *C.GMenuModel // out
@@ -4109,7 +4124,7 @@ func _gotk4_gio2_MenuModel_ConnectItemsChanged(arg0 C.gpointer, arg1 C.gint, arg
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -4228,7 +4243,7 @@ func _gotk4_gio2_MountOperation_ConnectAborted(arg0 C.gpointer, arg1 C.guintptr)
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -4244,7 +4259,7 @@ func _gotk4_gio2_MountOperation_ConnectAskPassword(arg0 C.gpointer, arg1 *C.gcha
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg5))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -4270,7 +4285,7 @@ func _gotk4_gio2_MountOperation_ConnectAskQuestion(arg0 C.gpointer, arg1 *C.gcha
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -4304,7 +4319,7 @@ func _gotk4_gio2_MountOperation_ConnectReply(arg0 C.gpointer, arg1 C.GMountOpera
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -4324,7 +4339,7 @@ func _gotk4_gio2_MountOperation_ConnectShowUnmountProgress(arg0 C.gpointer, arg1
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5150,7 +5165,7 @@ func _gotk4_gio2_Resolver_ConnectReload(arg0 C.gpointer, arg1 C.guintptr) {
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg1))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5244,7 +5259,7 @@ func _gotk4_gio2_Settings_ConnectChangeEvent(arg0 C.gpointer, arg1 C.gpointer, a
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5273,7 +5288,7 @@ func _gotk4_gio2_Settings_ConnectChanged(arg0 C.gpointer, arg1 *C.gchar, arg2 C.
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5293,7 +5308,7 @@ func _gotk4_gio2_Settings_ConnectWritableChangeEvent(arg0 C.gpointer, arg1 C.gui
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5321,7 +5336,7 @@ func _gotk4_gio2_Settings_ConnectWritableChanged(arg0 C.gpointer, arg1 *C.gchar,
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5341,7 +5356,7 @@ func _gotk4_gio2_SimpleAction_ConnectActivate(arg0 C.gpointer, arg1 *C.GVariant,
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5370,7 +5385,7 @@ func _gotk4_gio2_SimpleAction_ConnectChangeState(arg0 C.gpointer, arg1 *C.GVaria
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5583,7 +5598,7 @@ func _gotk4_gio2_SocketClient_ConnectEvent(arg0 C.gpointer, arg1 C.GSocketClient
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg4))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5732,7 +5747,7 @@ func _gotk4_gio2_SocketListener_ConnectEvent(arg0 C.gpointer, arg1 C.GSocketList
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5779,7 +5794,7 @@ func _gotk4_gio2_SocketService_ConnectIncoming(arg0 C.gpointer, arg1 *C.GSocketC
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -5836,7 +5851,7 @@ func _gotk4_gio2_ThreadedSocketService_ConnectRun(arg0 C.gpointer, arg1 *C.GSock
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -6072,7 +6087,7 @@ func _gotk4_gio2_TlsConnection_ConnectAcceptCertificate(arg0 C.gpointer, arg1 *C
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg3))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7415,7 +7430,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectDriveChanged(arg0 C.gpointer, arg1 *C.GDri
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7451,7 +7466,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectDriveConnected(arg0 C.gpointer, arg1 *C.GD
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7487,7 +7502,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectDriveDisconnected(arg0 C.gpointer, arg1 *C
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7523,7 +7538,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectDriveEjectButton(arg0 C.gpointer, arg1 *C.
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7559,7 +7574,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectDriveStopButton(arg0 C.gpointer, arg1 *C.G
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7595,7 +7610,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectMountAdded(arg0 C.gpointer, arg1 *C.GMount
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7631,7 +7646,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectMountChanged(arg0 C.gpointer, arg1 *C.GMou
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7667,7 +7682,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectMountPreUnmount(arg0 C.gpointer, arg1 *C.G
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7703,7 +7718,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectMountRemoved(arg0 C.gpointer, arg1 *C.GMou
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7739,7 +7754,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectVolumeAdded(arg0 C.gpointer, arg1 *C.GVolu
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7775,7 +7790,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectVolumeChanged(arg0 C.gpointer, arg1 *C.GVo
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
@@ -7811,7 +7826,7 @@ func _gotk4_gio2_VolumeMonitor_ConnectVolumeRemoved(arg0 C.gpointer, arg1 *C.GVo
 	{
 		closure := coreglib.ConnectedGeneratedClosure(uintptr(arg2))
 		if closure == nil {
-			panic("given unknown closure user_data")
+			return
 		}
 		defer closure.TryRepanic()
 
