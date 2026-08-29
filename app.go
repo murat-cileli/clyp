@@ -31,6 +31,7 @@ func (app *Application) init() {
 	app.setupConfigDir()
 	config.init()
 	database.init()
+	clipboard.enforceMaxItems()
 }
 
 func (app *Application) setupConfigDir() {

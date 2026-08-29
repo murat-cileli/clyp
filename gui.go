@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
@@ -24,12 +25,19 @@ var (
 	watcherFile string
 )
 
+const clipboardItemsPageSize = 30
+
 type GUI struct {
 	clipboardItemsList *gtk.ListBox
+	clipboardScrolled  *gtk.ScrolledWindow
 	searchEntry        *gtk.SearchEntry
 	searchBar          *gtk.SearchBar
 	searchToggleButton *gtk.ToggleButton
 	window             *gtk.ApplicationWindow
+	runOnStartupAction *gio.SimpleAction
+	closeOnCopyAction  *gio.SimpleAction
+	loadedItems        int
+	loadingItems       bool
 }
 
 func (gui *GUI) init() {
@@ -46,16 +54,21 @@ func (gui *GUI) activate(gtkApp *gtk.Application) {
 	builder := gtk.NewBuilderFromString(uiXML)
 	gui.window = builder.GetObject("gtk_window").Cast().(*gtk.ApplicationWindow)
 	gui.clipboardItemsList = builder.GetObject("clipboard_list").Cast().(*gtk.ListBox)
+	gui.clipboardScrolled = builder.GetObject("clipboard_scrolled_window").Cast().(*gtk.ScrolledWindow)
 	gui.searchEntry = builder.GetObject("search_entry").Cast().(*gtk.SearchEntry)
 	gui.searchBar = builder.GetObject("search_bar").Cast().(*gtk.SearchBar)
 	gui.searchToggleButton = builder.GetObject("search_toggle_button").Cast().(*gtk.ToggleButton)
 	gui.window.SetApplication(gtkApp)
 	gui.setupCSS()
 	gui.updateClipboardRows(true)
-	gui.focusClipboardItemByIndex(0)
 	gui.window.SetVisible(true)
+	if config.FocusWindowOnOpen {
+		gui.window.Present()
+		gui.focusClipboardItemByIndex(0)
+	}
 	gui.setupEvents(gtkApp)
 	gui.setupShortcutsAction(gtkApp)
+	gui.setupSettingsAction(gtkApp)
 	gui.setupAboutAction(gtkApp)
 	gui.setupActionRunOnStartup(gtkApp)
 	gui.setupCloseOnCopy(gtkApp)
@@ -112,13 +125,31 @@ func (gui *GUI) updateTitle(itemsShowing, itemsTotal string) {
 
 func (gui *GUI) updateClipboardRows(updateItemCount bool) {
 	gui.clipboardItemsList.RemoveAll()
-	items, err := clipboard.items(updateItemCount)
+	gui.loadedItems = 0
+	gui.loadClipboardRows(updateItemCount)
+}
+
+func (gui *GUI) loadClipboardRows(updateItemCount bool) {
+	if gui.loadingItems {
+		return
+	}
+	if gui.loadedItems > 0 && gui.loadedItems >= clipboard.itemCount {
+		return
+	}
+
+	gui.loadingItems = true
+	defer func() {
+		gui.loadingItems = false
+	}()
+
+	items, err := clipboard.items(updateItemCount, clipboardItemsPageSize, gui.loadedItems)
 	if err != nil {
 		log.Printf("Error getting clipboard items: %v", err)
 		return
 	}
 
-	gui.updateTitle(strconv.Itoa(len(items)), strconv.Itoa(clipboard.itemCount))
+	gui.loadedItems += len(items)
+	gui.updateTitle(strconv.Itoa(gui.loadedItems), strconv.Itoa(clipboard.itemCount))
 
 	if len(items) == 0 {
 		return
@@ -144,10 +175,12 @@ func (gui *GUI) addTextRow(item ClipboardItem) {
 	box.SetMarginEnd(12)
 	box.AddCSSClass("item-box")
 
-	if len(item.content) > 100 {
-		item.content = item.content[:100] + "\n..."
+	content := strings.ToValidUTF8(item.content, "")
+	contentRunes := []rune(content)
+	if len(contentRunes) > 100 {
+		content = string(contentRunes[:100]) + "\n..."
 	}
-	contentLabel := gtk.NewLabel(item.content)
+	contentLabel := gtk.NewLabel(content)
 	contentLabel.SetWrap(true)
 	contentLabel.SetWrapMode(pango.WrapWordChar)
 	contentLabel.SetXAlign(0)
@@ -245,6 +278,7 @@ func (gui *GUI) scaleImageToFit(image *gtk.Image, texture *gdk.Texture, maxSize 
 func (gui *GUI) setupEvents(gtkApp *gtk.Application) {
 	gui.setupAppEvents(gtkApp)
 	gui.setupClipBoardListEvents(gtkApp)
+	gui.setupScrollEvents()
 	gui.setupWindowEvents()
 	gui.setupSearchBarEvents()
 }
@@ -277,8 +311,8 @@ func (gui *GUI) setupClipBoardListEvents(gtkApp *gtk.Application) {
 
 		if keyval == gdk.KEY_Delete {
 			selectedRow := gui.clipboardItemsList.SelectedRow()
-			selectedRowIndex := selectedRow.Index()
 			if selectedRow != nil {
+				selectedRowIndex := selectedRow.Index()
 				clipboard.removeFromDatabase(selectedRow.Name())
 				gui.updateClipboardRows(true)
 				gui.focusClipboardItemByIndex(selectedRowIndex)
@@ -319,6 +353,21 @@ func (gui *GUI) setupClipBoardListEvents(gtkApp *gtk.Application) {
 	gui.clipboardItemsList.AddController(clipboardListkeyController)
 	gui.clipboardItemsList.AddController(gestureClick)
 
+}
+
+func (gui *GUI) setupScrollEvents() {
+	gui.clipboardScrolled.ConnectEdgeReached(func(pos gtk.PositionType) {
+		if pos == gtk.PosBottom {
+			gui.loadClipboardRows(false)
+		}
+	})
+
+	adjustment := gui.clipboardScrolled.VAdjustment()
+	adjustment.ConnectValueChanged(func() {
+		if adjustment.Value()+adjustment.PageSize() >= adjustment.Upper()-48 {
+			gui.loadClipboardRows(false)
+		}
+	})
 }
 
 func (gui *GUI) setupWindowEvents() {
@@ -407,13 +456,13 @@ func (gui *GUI) setupSearchBarEvents() {
 	gui.searchEntry.ConnectSearchChanged(func() {
 		if gui.searchEntry.Text() == "" {
 			database.searchFilter = ""
-			gui.updateClipboardRows(false)
+			gui.updateClipboardRows(true)
 			gui.focusClipboardItemByIndex(0)
 			gui.searchBarControl("hide")
 			return
 		}
 		database.searchFilter = gui.searchEntry.Text()
-		gui.updateClipboardRows(false)
+		gui.updateClipboardRows(true)
 	})
 	gui.searchBar.ConnectEntry(gui.searchEntry)
 	gui.searchToggleButton.ConnectToggled(func() {
@@ -476,6 +525,125 @@ func (gui *GUI) showShortcutsWindow(parent *gtk.ApplicationWindow) {
 	shortcutsWindow.SetVisible(true)
 }
 
+func (gui *GUI) setupSettingsAction(gtkApp *gtk.Application) {
+	settingsAction := gio.NewSimpleAction("settings", nil)
+	settingsAction.ConnectActivate(func(parameter *glib.Variant) {
+		gui.showSettingsDialog(gui.window)
+	})
+	gtkApp.AddAction(settingsAction)
+}
+
+func (gui *GUI) showSettingsDialog(parent *gtk.ApplicationWindow) {
+	settingsDialog := gtk.NewDialog()
+	settingsDialog.SetTransientFor(&parent.Window)
+	settingsDialog.SetModal(true)
+	settingsDialog.SetTitle("Settings")
+	settingsDialog.SetDefaultSize(420, 120)
+	settingsDialog.AddButton("Close", int(gtk.ResponseClose))
+
+	contentArea := settingsDialog.ContentArea()
+	contentArea.SetMarginTop(16)
+	contentArea.SetMarginBottom(16)
+	contentArea.SetMarginStart(16)
+	contentArea.SetMarginEnd(16)
+	contentArea.SetSpacing(8)
+
+	runOnStartupCheckButton := gtk.NewCheckButtonWithLabel("Run on Startup")
+	runOnStartupCheckButton.SetActive(gui.startupEntryControl("check"))
+	runOnStartupCheckButton.ConnectToggled(func() {
+		runOnStartup := runOnStartupCheckButton.Active()
+		if runOnStartup {
+			gui.startupEntryControl("add")
+		} else {
+			gui.startupEntryControl("remove")
+		}
+		if gui.runOnStartupAction != nil {
+			gui.runOnStartupAction.SetState(glib.NewVariantBoolean(runOnStartup))
+		}
+	})
+
+	closeOnCopyCheckButton := gtk.NewCheckButtonWithLabel("Close on Copy")
+	closeOnCopyCheckButton.SetActive(config.CloseOnCopy)
+	closeOnCopyCheckButton.ConnectToggled(func() {
+		config.CloseOnCopy = closeOnCopyCheckButton.Active()
+		config.save()
+		if gui.closeOnCopyAction != nil {
+			gui.closeOnCopyAction.SetState(glib.NewVariantBoolean(config.CloseOnCopy))
+		}
+	})
+
+	focusWindowCheckButton := gtk.NewCheckButtonWithLabel("Focus the application window when opening it")
+	focusWindowCheckButton.SetActive(config.FocusWindowOnOpen)
+	focusWindowCheckButton.ConnectToggled(func() {
+		config.FocusWindowOnOpen = focusWindowCheckButton.Active()
+		config.save()
+	})
+
+	maxItemsBox := gtk.NewBox(gtk.OrientationHorizontal, 12)
+	maxItemsLabel := gtk.NewLabel("Maximum saved clipboard items")
+	maxItemsLabel.SetXAlign(0)
+	maxItemsLabel.SetHExpand(true)
+
+	maxItemsSpinButton := gtk.NewSpinButtonWithRange(1, 100000, 1)
+	maxItemsSpinButton.SetValue(float64(config.MaxClipboardItems))
+	maxItemsSpinButton.SetNumeric(true)
+	maxItemsSpinButton.ConnectValueChanged(func() {
+		config.MaxClipboardItems = maxItemsSpinButton.ValueAsInt()
+		config.save()
+		clipboard.enforceMaxItems()
+		gui.updateClipboardRows(true)
+	})
+
+	clearClipboardButton := gtk.NewButtonWithLabel("Clear Clipboard")
+	clearClipboardButton.AddCSSClass("destructive-action")
+	clearClipboardButton.ConnectClicked(func() {
+		gui.showClearClipboardDialog(settingsDialog)
+	})
+
+	maxItemsBox.Append(maxItemsLabel)
+	maxItemsBox.Append(maxItemsSpinButton)
+
+	contentArea.Append(runOnStartupCheckButton)
+	contentArea.Append(closeOnCopyCheckButton)
+	contentArea.Append(focusWindowCheckButton)
+	contentArea.Append(maxItemsBox)
+	contentArea.Append(clearClipboardButton)
+	settingsDialog.ConnectResponse(func(responseId int) {
+		settingsDialog.Close()
+	})
+	settingsDialog.SetVisible(true)
+}
+
+func (gui *GUI) showClearClipboardDialog(parent *gtk.Dialog) {
+	confirmDialog := gtk.NewDialog()
+	confirmDialog.SetTransientFor(&parent.Window)
+	confirmDialog.SetModal(true)
+	confirmDialog.SetTitle("Clear Clipboard")
+	confirmDialog.AddButton("Cancel", int(gtk.ResponseCancel))
+	confirmDialog.AddButton("Clear", int(gtk.ResponseAccept))
+	confirmDialog.SetDefaultResponse(int(gtk.ResponseCancel))
+
+	contentArea := confirmDialog.ContentArea()
+	contentArea.SetMarginTop(16)
+	contentArea.SetMarginBottom(16)
+	contentArea.SetMarginStart(16)
+	contentArea.SetMarginEnd(16)
+
+	messageLabel := gtk.NewLabel("Clear all saved clipboard items?")
+	messageLabel.SetWrap(true)
+	messageLabel.SetXAlign(0)
+	contentArea.Append(messageLabel)
+
+	confirmDialog.ConnectResponse(func(responseId int) {
+		if responseId == int(gtk.ResponseAccept) {
+			clipboard.removeAllFromDatabase()
+			gui.updateClipboardRows(true)
+		}
+		confirmDialog.Close()
+	})
+	confirmDialog.SetVisible(true)
+}
+
 func (gui *GUI) setupAboutAction(gtkApp *gtk.Application) {
 	aboutAction := gio.NewSimpleAction("about", nil)
 	aboutAction.ConnectActivate(func(parameter *glib.Variant) {
@@ -504,6 +672,7 @@ func (gui *GUI) setupActionRunOnStartup(gtkApp *gtk.Application) {
 	actionRunOnStartup.ConnectActivate(func(parameter *glib.Variant) {
 		gui.handleRunOnStartup(actionRunOnStartup)
 	})
+	gui.runOnStartupAction = actionRunOnStartup
 	gtkApp.AddAction(actionRunOnStartup)
 	if !hasStartupEntry {
 		glib.TimeoutAdd(1000, func() bool {
@@ -519,6 +688,7 @@ func (gui *GUI) setupCloseOnCopy(gtkApp *gtk.Application) {
 	actionCloseOnCopy.ConnectActivate(func(parameter *glib.Variant) {
 		gui.handleCloseOnCopy(actionCloseOnCopy)
 	})
+	gui.closeOnCopyAction = actionCloseOnCopy
 	gtkApp.AddAction(actionCloseOnCopy)
 }
 
@@ -572,7 +742,7 @@ func (gui *GUI) showAddToStartupToast() {
 	toastBox.SetMarginEnd(20)
 	toastBox.AddCSSClass("toast")
 
-	label := gtk.NewLabel("Go the menu to add Clyp to the system startup.")
+	label := gtk.NewLabel("Go to Settings to add Clyp to the system startup.")
 	label.SetHAlign(gtk.AlignCenter)
 	toastBox.Append(label)
 

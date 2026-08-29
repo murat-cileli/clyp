@@ -1,5 +1,5 @@
 .titlebar {
-    background: var(--theme_bg_color);
+    background: @theme_bg_color;
     border-bottom: none;
     box-shadow: none;
 }
@@ -9,7 +9,7 @@
 }
 
 .clipboard-list {
-    background: var(--theme_bg_color);
+    background: @theme_bg_color;
 }
 
 .clipboard-list, .clipboard-list * {
@@ -25,8 +25,8 @@
 }
 
 .toast {
-    background: var(--theme_selected_bg_color);
-    color: var(--theme_selected_fg_color);
+    background: @theme_selected_bg_color;
+    color: @theme_selected_fg_color;
     border-radius: 8px;
     padding: 8px 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);

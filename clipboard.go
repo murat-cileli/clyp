@@ -26,17 +26,21 @@ type ClipboardItem struct {
 	itemType byte
 }
 
-func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error) {
+func (clipboard *Clipboard) items(updateItemCount bool, limit, offset int) ([]ClipboardItem, error) {
 	var items []ClipboardItem
 	var rows *sql.Rows
 	var err error
 
+	if updateItemCount {
+		clipboard.count()
+	}
+
 	if database.searchFilter != "" {
-		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT 30`
-		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%")
+		database.query = `SELECT id, type, date_time, content FROM clipboard WHERE type=1 AND content LIKE ? ORDER BY date_time DESC LIMIT ? OFFSET ?`
+		rows, err = database.db.Query(database.query, "%"+database.searchFilter+"%", limit, offset)
 	} else {
-		database.query = database.queryBase
-		rows, err = database.db.Query(database.query)
+		database.query = database.queryBase + " LIMIT ? OFFSET ?"
+		rows, err = database.db.Query(database.query, limit, offset)
 	}
 
 	if err != nil {
@@ -52,15 +56,16 @@ func (clipboard *Clipboard) items(updateItemCount bool) ([]ClipboardItem, error)
 		items = append(items, item)
 	}
 
-	if updateItemCount {
-		clipboard.count()
-	}
-
 	return items, nil
 }
 
 func (clipboard *Clipboard) count() {
-	rowTotalItemsCount := database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard")
+	var rowTotalItemsCount *sql.Row
+	if database.searchFilter != "" {
+		rowTotalItemsCount = database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard WHERE type=1 AND content LIKE ?", "%"+database.searchFilter+"%")
+	} else {
+		rowTotalItemsCount = database.db.QueryRow("SELECT COUNT(*) as total_items FROM clipboard")
+	}
 	rowTotalItemsCount.Scan(&clipboard.itemCount)
 }
 
@@ -175,7 +180,26 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 	}
 
 	clipboard.recentContent = content
+	clipboard.enforceMaxItems()
 	ipc.notify()
+}
+
+func (clipboard *Clipboard) enforceMaxItems() {
+	if config.MaxClipboardItems <= 0 {
+		return
+	}
+
+	_, err := database.db.Exec(`
+DELETE FROM clipboard
+WHERE id NOT IN (
+	SELECT id
+	FROM clipboard
+	ORDER BY date_time DESC, id DESC
+	LIMIT ?
+)`, config.MaxClipboardItems)
+	if err != nil {
+		log.Printf("Failed to enforce clipboard item limit: %v", err)
+	}
 }
 
 func (clipboard *Clipboard) copy(id string, gtkApp *gtk.Application) {
@@ -229,4 +253,14 @@ func (clipboard *Clipboard) removeFromDatabase(id string) {
 		return
 	}
 	database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
+}
+
+func (clipboard *Clipboard) removeAllFromDatabase() {
+	_, err := database.db.Exec("DELETE FROM clipboard")
+	if err != nil {
+		log.Printf("Failed to clear clipboard database: %v", err)
+		return
+	}
+	clipboard.recentContent = ""
+	clipboard.itemCount = 0
 }
