@@ -150,15 +150,15 @@
         <attribute name="label" translatable="yes">Run on Startup</attribute>
         <attribute name="action">app.run_on_startup</attribute>
       </item>
-      <item>
-        <attribute name="label" translatable="yes">Close on Copy</attribute>
-        <attribute name="action">app.close_on_copy</attribute>
-      </item>
     </section>
     <section>
       <item>
         <attribute name="label" translatable="yes">Shortcuts</attribute>
         <attribute name="action">app.shortcuts</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">Settings</attribute>
+        <attribute name="action">app.settings</attribute>
       </item>
       <item>
         <attribute name="label" translatable="yes">About</attribute>

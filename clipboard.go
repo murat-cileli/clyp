@@ -230,3 +230,13 @@ func (clipboard *Clipboard) removeFromDatabase(id string) {
 	}
 	database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
 }
+
+func (clipboard *Clipboard) removeAllFromDatabase() {
+	_, err := database.db.Exec("DELETE FROM clipboard")
+	if err != nil {
+		log.Printf("Failed to clear clipboard database: %v", err)
+		return
+	}
+	clipboard.recentContent = ""
+	clipboard.itemCount = 0
+}
