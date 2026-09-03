@@ -30,6 +30,8 @@ type GUI struct {
 	searchBar          *gtk.SearchBar
 	searchToggleButton *gtk.ToggleButton
 	window             *gtk.ApplicationWindow
+	runOnStartupAction *gio.SimpleAction
+	closeOnCopyAction  *gio.SimpleAction
 }
 
 func (gui *GUI) init() {
@@ -52,10 +54,14 @@ func (gui *GUI) activate(gtkApp *gtk.Application) {
 	gui.window.SetApplication(gtkApp)
 	gui.setupCSS()
 	gui.updateClipboardRows(true)
-	gui.focusClipboardItemByIndex(0)
 	gui.window.SetVisible(true)
+	if config.FocusWindowOnOpen {
+		gui.window.Present()
+		gui.focusClipboardItemByIndex(0)
+	}
 	gui.setupEvents(gtkApp)
 	gui.setupShortcutsAction(gtkApp)
+	gui.setupSettingsAction(gtkApp)
 	gui.setupAboutAction(gtkApp)
 	gui.setupActionRunOnStartup(gtkApp)
 	gui.setupCloseOnCopy(gtkApp)
@@ -476,6 +482,125 @@ func (gui *GUI) showShortcutsWindow(parent *gtk.ApplicationWindow) {
 	shortcutsWindow.SetVisible(true)
 }
 
+func (gui *GUI) setupSettingsAction(gtkApp *gtk.Application) {
+	settingsAction := gio.NewSimpleAction("settings", nil)
+	settingsAction.ConnectActivate(func(parameter *glib.Variant) {
+		gui.showSettingsDialog(gui.window)
+	})
+	gtkApp.AddAction(settingsAction)
+}
+
+func (gui *GUI) showSettingsDialog(parent *gtk.ApplicationWindow) {
+	settingsDialog := gtk.NewDialog()
+	settingsDialog.SetTransientFor(&parent.Window)
+	settingsDialog.SetModal(true)
+	settingsDialog.SetTitle("Settings")
+	settingsDialog.SetDefaultSize(420, 120)
+	settingsDialog.AddButton("Close", int(gtk.ResponseClose))
+
+	contentArea := settingsDialog.ContentArea()
+	contentArea.SetMarginTop(16)
+	contentArea.SetMarginBottom(16)
+	contentArea.SetMarginStart(16)
+	contentArea.SetMarginEnd(16)
+	contentArea.SetSpacing(8)
+
+	runOnStartupCheckButton := gtk.NewCheckButtonWithLabel("Run on Startup")
+	runOnStartupCheckButton.SetActive(gui.startupEntryControl("check"))
+	runOnStartupCheckButton.ConnectToggled(func() {
+		runOnStartup := runOnStartupCheckButton.Active()
+		if runOnStartup {
+			gui.startupEntryControl("add")
+		} else {
+			gui.startupEntryControl("remove")
+		}
+		if gui.runOnStartupAction != nil {
+			gui.runOnStartupAction.SetState(glib.NewVariantBoolean(runOnStartup))
+		}
+	})
+
+	closeOnCopyCheckButton := gtk.NewCheckButtonWithLabel("Close on Copy")
+	closeOnCopyCheckButton.SetActive(config.CloseOnCopy)
+	closeOnCopyCheckButton.ConnectToggled(func() {
+		config.CloseOnCopy = closeOnCopyCheckButton.Active()
+		config.save()
+		if gui.closeOnCopyAction != nil {
+			gui.closeOnCopyAction.SetState(glib.NewVariantBoolean(config.CloseOnCopy))
+		}
+	})
+
+	focusWindowCheckButton := gtk.NewCheckButtonWithLabel("Focus the application window when opening it")
+	focusWindowCheckButton.SetActive(config.FocusWindowOnOpen)
+	focusWindowCheckButton.ConnectToggled(func() {
+		config.FocusWindowOnOpen = focusWindowCheckButton.Active()
+		config.save()
+	})
+
+	maxItemsBox := gtk.NewBox(gtk.OrientationHorizontal, 12)
+	maxItemsLabel := gtk.NewLabel("Maximum saved clipboard items")
+	maxItemsLabel.SetXAlign(0)
+	maxItemsLabel.SetHExpand(true)
+
+	maxItemsSpinButton := gtk.NewSpinButtonWithRange(1, 100000, 1)
+	maxItemsSpinButton.SetValue(float64(config.MaxClipboardItems))
+	maxItemsSpinButton.SetNumeric(true)
+	maxItemsSpinButton.ConnectValueChanged(func() {
+		config.MaxClipboardItems = maxItemsSpinButton.ValueAsInt()
+		config.save()
+		clipboard.enforceMaxItems()
+		gui.updateClipboardRows(true)
+	})
+
+	clearClipboardButton := gtk.NewButtonWithLabel("Clear Clipboard")
+	clearClipboardButton.AddCSSClass("destructive-action")
+	clearClipboardButton.ConnectClicked(func() {
+		gui.showClearClipboardDialog(settingsDialog)
+	})
+
+	maxItemsBox.Append(maxItemsLabel)
+	maxItemsBox.Append(maxItemsSpinButton)
+
+	contentArea.Append(runOnStartupCheckButton)
+	contentArea.Append(closeOnCopyCheckButton)
+	contentArea.Append(focusWindowCheckButton)
+	contentArea.Append(maxItemsBox)
+	contentArea.Append(clearClipboardButton)
+	settingsDialog.ConnectResponse(func(responseId int) {
+		settingsDialog.Close()
+	})
+	settingsDialog.SetVisible(true)
+}
+
+func (gui *GUI) showClearClipboardDialog(parent *gtk.Dialog) {
+	confirmDialog := gtk.NewDialog()
+	confirmDialog.SetTransientFor(&parent.Window)
+	confirmDialog.SetModal(true)
+	confirmDialog.SetTitle("Clear Clipboard")
+	confirmDialog.AddButton("Cancel", int(gtk.ResponseCancel))
+	confirmDialog.AddButton("Clear", int(gtk.ResponseAccept))
+	confirmDialog.SetDefaultResponse(int(gtk.ResponseCancel))
+
+	contentArea := confirmDialog.ContentArea()
+	contentArea.SetMarginTop(16)
+	contentArea.SetMarginBottom(16)
+	contentArea.SetMarginStart(16)
+	contentArea.SetMarginEnd(16)
+
+	messageLabel := gtk.NewLabel("Clear all saved clipboard items?")
+	messageLabel.SetWrap(true)
+	messageLabel.SetXAlign(0)
+	contentArea.Append(messageLabel)
+
+	confirmDialog.ConnectResponse(func(responseId int) {
+		if responseId == int(gtk.ResponseAccept) {
+			clipboard.removeAllFromDatabase()
+			gui.updateClipboardRows(true)
+		}
+		confirmDialog.Close()
+	})
+	confirmDialog.SetVisible(true)
+}
+
 func (gui *GUI) setupAboutAction(gtkApp *gtk.Application) {
 	aboutAction := gio.NewSimpleAction("about", nil)
 	aboutAction.ConnectActivate(func(parameter *glib.Variant) {
@@ -504,6 +629,7 @@ func (gui *GUI) setupActionRunOnStartup(gtkApp *gtk.Application) {
 	actionRunOnStartup.ConnectActivate(func(parameter *glib.Variant) {
 		gui.handleRunOnStartup(actionRunOnStartup)
 	})
+	gui.runOnStartupAction = actionRunOnStartup
 	gtkApp.AddAction(actionRunOnStartup)
 	if !hasStartupEntry {
 		glib.TimeoutAdd(1000, func() bool {
@@ -519,6 +645,7 @@ func (gui *GUI) setupCloseOnCopy(gtkApp *gtk.Application) {
 	actionCloseOnCopy.ConnectActivate(func(parameter *glib.Variant) {
 		gui.handleCloseOnCopy(actionCloseOnCopy)
 	})
+	gui.closeOnCopyAction = actionCloseOnCopy
 	gtkApp.AddAction(actionCloseOnCopy)
 }
 
@@ -572,7 +699,7 @@ func (gui *GUI) showAddToStartupToast() {
 	toastBox.SetMarginEnd(20)
 	toastBox.AddCSSClass("toast")
 
-	label := gtk.NewLabel("Go the menu to add Clyp to the system startup.")
+	label := gtk.NewLabel("Go to Settings to add Clyp to the system startup.")
 	label.SetHAlign(gtk.AlignCenter)
 	toastBox.Append(label)
 

@@ -175,7 +175,26 @@ func (clipboard *Clipboard) saveToDatabase(content string, itemType byte) {
 	}
 
 	clipboard.recentContent = content
+	clipboard.enforceMaxItems()
 	ipc.notify()
+}
+
+func (clipboard *Clipboard) enforceMaxItems() {
+	if config.MaxClipboardItems <= 0 {
+		return
+	}
+
+	_, err := database.db.Exec(`
+DELETE FROM clipboard
+WHERE id NOT IN (
+	SELECT id
+	FROM clipboard
+	ORDER BY date_time DESC, id DESC
+	LIMIT ?
+)`, config.MaxClipboardItems)
+	if err != nil {
+		log.Printf("Failed to enforce clipboard item limit: %v", err)
+	}
 }
 
 func (clipboard *Clipboard) copy(id string, gtkApp *gtk.Application) {
@@ -229,4 +248,14 @@ func (clipboard *Clipboard) removeFromDatabase(id string) {
 		return
 	}
 	database.db.Exec("DELETE FROM clipboard WHERE id=?", id)
+}
+
+func (clipboard *Clipboard) removeAllFromDatabase() {
+	_, err := database.db.Exec("DELETE FROM clipboard")
+	if err != nil {
+		log.Printf("Failed to clear clipboard database: %v", err)
+		return
+	}
+	clipboard.recentContent = ""
+	clipboard.itemCount = 0
 }
