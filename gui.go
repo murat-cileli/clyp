@@ -266,7 +266,10 @@ func (gui *GUI) setupClipBoardListEvents(gtkApp *gtk.Application) {
 				gui.searchBarControl("hide")
 				clipboard.copy(selectedRow.Name(), gtkApp)
 				if config.CloseOnCopy {
-					gui.shutdown(gtkApp)
+					glib.TimeoutAdd(100, func() bool {
+						gui.shutdown(gtkApp)
+						return false
+					})
 					return true
 				}
 				gui.updateClipboardRows(true)
@@ -307,7 +310,10 @@ func (gui *GUI) setupClipBoardListEvents(gtkApp *gtk.Application) {
 				gui.searchBarControl("hide")
 				clipboard.copy(selectedRow.Name(), gtkApp)
 				if config.CloseOnCopy {
-					gui.shutdown(gtkApp)
+					glib.TimeoutAdd(100, func() bool {
+						gui.shutdown(gtkApp)
+						return false
+					})
 					return
 				}
 				gui.updateClipboardRows(true)
