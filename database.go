@@ -15,7 +15,11 @@ type Database struct {
 
 func (database *Database) init() error {
 	database.searchFilter = ""
-	database.queryBase = "SELECT id, type, date_time, content FROM clipboard ORDER BY date_time DESC LIMIT 30"
+	database.queryBase = `
+SELECT id, type, date_time,
+	CASE WHEN type = 1 THEN substr(content, 1, 101) ELSE content END
+FROM clipboard
+ORDER BY date_time DESC, id DESC`
 	if err := database.connect(); err != nil {
 		return err
 	}

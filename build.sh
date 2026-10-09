@@ -8,13 +8,14 @@ case $1 in
       GTK_THEME="Adwaita:dark"
     fi
     go build -mod=vendor -v -o dist/clyp_linux_amd64_v1/clyp . \
+      && go build -mod=vendor -v -o dist/clyp_linux_amd64_v1/clyp-watcher ./cmd/clyp-watcher \
       && cd dist/clyp_linux_amd64_v1/ \
       && GTK_THEME=$GTK_THEME RUN_ENV=dev ./clyp
     ;;
   run-watcher)
-    go build -mod=vendor -v -o dist/clyp_linux_amd64_v1/clyp . \
+    go build -mod=vendor -v -o dist/clyp_linux_amd64_v1/clyp-watcher ./cmd/clyp-watcher \
       && cd dist/clyp_linux_amd64_v1/ \
-      && GDK_BACKEND=x11 ./clyp --watch
+      && ./clyp-watcher
     ;;
   package-snapshot)
     goreleaser release --snapshot --clean \

@@ -4,6 +4,8 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 )
 
 type IPC struct{}
@@ -39,11 +41,14 @@ func (ipc *IPC) listen() {
 		b := make([]byte, 1)
 		_, err = conn.Read(b)
 		if err != nil {
+			conn.Close()
 			log.Printf("Failed to read from socket: %v", err)
 			continue
 		}
-		gui.updateClipboardRows(true)
-		gui.focusClipboardItemByIndex(0)
+		glib.IdleAdd(func() {
+			gui.handleClipboardChange()
+			gui.focusClipboardItemByIndex(0)
+		})
 		conn.Close()
 	}
 }

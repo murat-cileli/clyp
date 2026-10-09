@@ -5,6 +5,16 @@ before:
     - go mod tidy
 builds:
   - id: clyp
+    binary: clyp
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: clyp-watcher
+    binary: clyp-watcher
+    main: ./cmd/clyp-watcher
     env:
       - CGO_ENABLED=1
     goos:

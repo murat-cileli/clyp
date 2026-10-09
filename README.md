@@ -11,7 +11,7 @@ Modern, fast, simple clipboard manager for Linux.
 - **Keyboard centric** - Navigate, search, copy and delete items with keyboard.
 - **High performance** - Optimized SQLite backend tested with 10,000+ records.
 - **Supports text and image content** (up to 3 images) with image previews.
-- **Wayland native GUI** (watcher module is X11) - Works on both Wayland and X11.
+- **Native Wayland and X11 clipboard monitoring** without loading GTK in the background watcher.
 
 ## Installation
 
@@ -38,6 +38,13 @@ clyp
 
 Or launch from your application menu.
 
+### Starting the Watcher at Login
+
+Configure `/usr/bin/clyp-watcher` to run at login. This is the lightweight,
+interface-free process responsible for monitoring the clipboard on X11 and
+Wayland. The `clyp` executable should only be started when you want to open the
+GTK interface and select an item from the history.
+
 ### Keyboard Shortcuts
 
 | Key | Action |
@@ -63,7 +70,11 @@ Or launch from your application menu.
 
 <img src="https://raw.githubusercontent.com/murat-cileli/clyp/refs/heads/master/architecture-1.png?v=2" style="max-width:622px;">
 
-The watcher is a minimal headless Gtk application. It monitors the clipboard and notifies the GUI of database changes via a UNIX socket.
+The application is split into two executables. `clyp` contains the GTK interface,
+while `clyp-watcher` is a lightweight process that talks directly to X11/XFixes
+or Wayland `ext-data-control-v1` and notifies the GUI of database changes through
+a UNIX socket. On Wayland compositors without `ext-data-control-v1`, it falls
+back to XWayland when available.
 
 ### Architecture
 - **Language**: Go 1.25.0
@@ -88,8 +99,12 @@ sudo apt install -y \
   build-essential \
   libpango1.0-dev \
   libgdk-pixbuf-2.0-dev \
-  libgtk-4-dev
-go build .
+  libgtk-4-dev \
+  libwayland-dev \
+  libx11-dev \
+  libxfixes-dev
+go build -o clyp .
+go build -o clyp-watcher ./cmd/clyp-watcher
 ```
 
 ### TODO

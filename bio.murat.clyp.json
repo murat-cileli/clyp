@@ -44,7 +44,9 @@
       },
       "build-commands": [
         "go build -mod=vendor -v -o clyp .",
+        "go build -mod=vendor -v -o clyp-watcher ./cmd/clyp-watcher",
         "install -Dm755 clyp /app/bin/clyp",
+        "install -Dm755 clyp-watcher /app/bin/clyp-watcher",
         "install -Dm644 data/bio.murat.clyp.metainfo.xml /app/share/metainfo/bio.murat.clyp.metainfo.xml",
         "install -Dm644 data/bio.murat.clyp.desktop /app/share/applications/bio.murat.clyp.desktop",
         "install -Dm644 data/icons/hicolor/16x16/apps/bio.murat.clyp.png /app/share/icons/hicolor/16x16/apps/bio.murat.clyp.png",

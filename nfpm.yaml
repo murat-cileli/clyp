@@ -3,6 +3,7 @@ name: "clyp"
 arch: "amd64"
 platform: "linux"
 version: 0.9.6
+release: "Tacio4"
 section: "utils"
 priority: "optional"
 replaces:
@@ -17,6 +18,8 @@ license: "GPL-3.0-only"
 contents:
   - src: dist/clyp_linux_amd64_v1/clyp
     dst: /usr/bin/clyp
+  - src: dist/clyp-watcher_linux_amd64_v1/clyp-watcher
+    dst: /usr/bin/clyp-watcher
   - src: data/bio.murat.clyp.metainfo.xml
     dst: /usr/share/metainfo/bio.murat.clyp.metainfo.xml
   - src: data/bio.murat.clyp.desktop
@@ -30,11 +33,20 @@ overrides:
   deb:
     depends:
       - libgtk-4-bin (>= 4.14.0-0)
+      - libwayland-client0
+      - libx11-6
+      - libxfixes3
   archlinux:
     depends:
       - gtk4
+      - libx11
+      - libxfixes
+      - wayland
   rpm:
     depends:
       - gtk4 >= 4.14.0-0
+      - libX11
+      - libXfixes
+      - libwayland-client
 archlinux:
   packager: "Murat Çileli <murat.cileli@gmail.com>"
